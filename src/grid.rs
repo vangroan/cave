@@ -48,28 +48,28 @@ impl Grid {
 pub struct Neighbours([Option<GridPosition>; 8]);
 
 impl Neighbours {
-    pub fn into_iter<'a>(self) -> Iter<'a>{
+    pub fn into_iter(self) -> Iter {
         Iter::new(self.0.into_iter().filter_map(|maybe_pos| *maybe_pos))
     }
 }
 
-pub struct Iter<'i> {
+pub struct Iter {
     // TODO: Remove heap alloc
-    inner: &'i mut Iterator<Item = GridPosition>,
+    inner: Box<Iterator<Item = GridPosition>>,
 }
 
-impl<'i> Iter<'i> {
+impl Iter {
     fn new<I>(inner: I) -> Self
     where
-        I: Iterator<Item = GridPosition> + 'i
+        I: Iterator<Item = GridPosition> + 'static
     {
         Iter {
-            inner: &mut inner
+            inner: Box::new(inner),
         }
     }
 }
 
-impl<'a> Iterator for Iter<'a> {
+impl Iterator for Iter {
     type Item = GridPosition;
 
     fn next(&mut self) -> Option<GridPosition> {

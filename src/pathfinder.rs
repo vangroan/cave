@@ -1,7 +1,8 @@
 
+use nalgebra::Vector3;
 use specs::{System, Write, Read};
 
-use super::grid::{Grid, GridPosition};
+use super::grid::{Grid, GridPosition, grid_index, grid_index_u};
 
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet, VecDeque};
@@ -17,33 +18,68 @@ impl Pathfinder {
         Pathfinder
     }
 
-    pub fn find_path(&self, grid: &Grid, start: &GridPosition, end: &GridPosition) {
+    pub fn find_path(&self, grid: &Grid, start: &GridPosition, end: &GridPosition) -> Option<Path> {
         // Note the BinaryHeap is a max-heap
-        let mut open : BinaryHeap<PathNode> = BinaryHeap::new();
+        let mut nodes = PathSpace::from_grid(&grid);
+        let mut open : BinaryHeap<PathNodePos> = BinaryHeap::new();
         let mut close : HashSet<GridPosition> = HashSet::new();
 
         // Seed lists with initial position
         let start_h = manhatten(start, end);
-        open.push(PathNode {
+        let start_node = PathNode {
             pos :start.clone(),
-            parent: None,
             g: 0,
             h: start_h,
             cost: start_h,
-        });
+        };
+        nodes.set(start_node, None);
+        open.push(PathNodePos(start.clone(), start_h));
         close.insert(start.clone());
 
-
-        while let Some(node) = open.pop() {
-            let neighbours = grid.neighbours(&node.pos);
+        while let Some(PathNodePos(node_pos, _)) = open.pop() {
+            // We keep track of how fra we've traveled from the start
+            let node_g : u32;
+            {
+                let (node, _parent) = nodes.get(&node_pos).expect("Popped node from priority queue that's not in the known space");
+                node_g = node.g;
+            }
+            
+            let neighbours = grid.neighbours(&node_pos);
             let in_bound_neighbours = neighbours
                 .into_iter()
                 .filter_map(|maybe_neigh| maybe_neigh.as_ref());
 
-            for neigh in in_bound_neighbours {
+            for neigh_pos in in_bound_neighbours {
+                // Disregard nodes we have seen before
+                if close.contains(&neigh_pos) {
+                    continue;
+                }
+
+                // Check if we've reached our destination
+                if &node_pos == end {
+                    // Trace the path back to start
+
+                }
+
+                let g = &node_g + 1;
+                let h = manhatten(&node_pos, neigh_pos);
+
+                // TODO: Check if node is pathable
+                let parent_node = Some(node_pos.clone());
+                let new_node = PathNode {
+                    pos :neigh_pos.clone(),
+                    g: g,
+                    h: h,
+                    cost: g + h,
+                };
                 
+                open.push(PathNodePos(new_node.pos.clone(), new_node.cost));
+                close.insert(neigh_pos.clone());
+                nodes.set(new_node, parent_node);
             }
         }
+
+        None
     }
 }
 
@@ -55,10 +91,58 @@ impl Default for Pathfinder {
 
 pub struct Path(Vec<PathNode>);
 
-#[derive(Eq, PartialEq)]
+/// Container to hold nodes that have been searched
+/// 
+/// Nodes are stored with an optional parent position, which is used
+/// to track the path of nodes.
+struct PathSpace {
+    data: Vec<Option<(PathNode, Option<GridPosition>)>>,
+    size: Vector3<u32>,
+}
+
+impl PathSpace {
+    fn with_size(x: u32, y: u32, z: u32) -> PathSpace {
+        let data : Vec<Option<(PathNode, Option<GridPosition>)>> = (0..(x*y*z))
+            .map(|_| None)
+            .collect();
+
+        PathSpace {
+            data,
+            size: Vector3::new(x, y, z),
+        }
+    }
+
+    fn from_grid(grid: &Grid) -> PathSpace {
+        let size = grid.size();
+        PathSpace::with_size(size.0, size.1, size.2)
+    }
+
+    fn get(&self, pos: &GridPosition) -> Option<&(PathNode, Option<GridPosition>)> {
+        let index = grid_index(&self.size, &pos);
+        match self.data.get(index) {
+            Some(in_bounds_node) => in_bounds_node.as_ref(),
+            None => None,
+        }
+    }
+
+    fn set(&mut self, node: PathNode, parent: Option<GridPosition>) {
+        let index = grid_index(&self.size, &node.pos);
+        self.data[index] = Some((node, parent));
+    }
+
+    fn clear(&mut self) {
+        for x in 0..self.size.x {
+            for y in 0..self.size.y {
+                for z in 0..self.size.z {
+                    self.data[grid_index_u(&self.size, &(x, y, z))] = None;
+                }
+            }
+        }
+    }
+}
+
 pub struct PathNode {
     pub pos: GridPosition,
-    pub parent: Option<GridPosition>,
     /// distance from start
     pub g: u32,
     /// heuristic
@@ -67,15 +151,19 @@ pub struct PathNode {
     pub cost: u32,
 }
 
-impl Ord for PathNode {
-    fn cmp(&self, other: &PathNode) -> Ordering {
+/// Wrapper for `GridPosition` and cost to allow for min-heap compare
+#[derive(Eq, PartialEq)]
+struct PathNodePos(GridPosition, u32);
+
+impl Ord for PathNodePos {
+    fn cmp(&self, other: &PathNodePos) -> Ordering {
         // Note that this is backwards to allow for a min-heap
-        other.cost.cmp(&self.cost)
+        other.1.cmp(&self.1)
     }
 }
 
-impl PartialOrd for PathNode {
-    fn partial_cmp(&self, other: &PathNode) -> Option<Ordering> {
+impl PartialOrd for PathNodePos {
+    fn partial_cmp(&self, other: &PathNodePos) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -114,5 +202,20 @@ impl<'a> System<'a> for PathfindingSystem {
         use rayon::prelude::*;
         use specs::Join;
         use specs::ParJoin;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_basic_pathfinding() {
+        let grid = Grid::with_size(128, 128, 128);
+        let pathfinder = Pathfinder::new();
+
+        {
+            pathfinder.find_path(&grid, &GridPosition::new(0, 0, 0), &GridPosition::new(127, 127, 0));
+        }
     }
 }

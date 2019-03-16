@@ -1,8 +1,5 @@
 
-use std::iter::IntoIterator;
-use std::marker::PhantomData;
-
-use na::{Vector3};
+use na::Vector3;
 
 // TODO: Make 3D
 const OFFSETS : [(i32, i32, i32); 8] = [
@@ -16,6 +13,28 @@ const OFFSETS : [(i32, i32, i32); 8] = [
     (1, 1, 0),
 ];
 
+/// Return a one dimensional array or vector index given
+/// a 3D cube size and a grid position.
+#[inline]
+pub fn grid_index(size: &Vector3<u32>, pos: &GridPosition) -> usize {
+        let x = pos.x() as u32;
+        let y = pos.y() as u32;
+        let z = pos.z() as u32;
+        (x + (y * size.x) + (z * (size.x * size.y))) as usize
+}
+
+/// Return a one dimensional array or vector index given
+/// a 3D cube size and a grid position.
+/// 
+/// Similar to `grid_index` but takes unsigned ints
+#[inline]
+pub fn grid_index_u(size: &Vector3<u32>, pos: &(u32, u32, u32)) -> usize {
+        let x = pos.0;
+        let y = pos.1;
+        let z = pos.2;
+        (x + (y * size.x) + (z * (size.x * size.y))) as usize
+}
+
 /// 3-Dimensional Grid
 pub struct Grid {
     size: Vector3<u32>,
@@ -26,6 +45,10 @@ impl Grid {
         Grid {
             size: Vector3::new(x, y, z),
         }
+    }
+
+    pub fn size(&self) -> (u32, u32, u32) {
+        (self.size.x, self.size.y, self.size.z)
     }
 
     pub fn neighbours(&self, pos: &GridPosition) -> [Option<GridPosition>; 8] {
@@ -72,5 +95,17 @@ impl GridPosition {
 
     pub fn z(&self) -> i32 {
         self.0.z
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_grid_index() {
+        let size = Vector3::<u32>::new(10, 10, 10);
+        assert_eq!(432, grid_index(&size, &GridPosition::new(2, 3, 4)));
+        assert_eq!(999, grid_index(&size, &GridPosition::new(9, 9, 9)));
     }
 }

@@ -1,4 +1,5 @@
 extern crate nalgebra as na;
+extern crate num_traits as nt;
 extern crate piston;
 extern crate graphics;
 extern crate glutin_window;
@@ -15,6 +16,7 @@ use opengl_graphics::{ GlGraphics, OpenGL };
 use specs::{DispatcherBuilder, World};
 
 mod grid;
+mod isometric;
 mod option;
 mod pathfinder;
 

@@ -1,4 +1,3 @@
-
 trait Flatten<T> {
     fn flatten(self) -> Option<T>;
 }

@@ -1,9 +1,8 @@
-
 use nalgebra::Vector3;
-use specs::{System, Write, Read};
+use specs::{Read, System, Write};
 
-use super::grid::{Grid, GridPosition, grid_index, grid_index_u};
-use super::option::*;
+use crate::grid::{grid_index, grid_index_u, Grid, GridPosition};
+use crate::option::*;
 
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet, VecDeque};
@@ -22,13 +21,13 @@ impl Pathfinder {
     pub fn find_path(&self, grid: &Grid, start: &GridPosition, end: &GridPosition) -> Option<Path> {
         // Note the BinaryHeap is a max-heap
         let mut nodes = PathSpace::from_grid(&grid);
-        let mut open : BinaryHeap<PathNodePos> = BinaryHeap::new();
-        let mut close : HashSet<GridPosition> = HashSet::new();
+        let mut open: BinaryHeap<PathNodePos> = BinaryHeap::new();
+        let mut close: HashSet<GridPosition> = HashSet::new();
 
         // Seed lists with initial position
         let start_h = manhatten(start, end);
         let start_node = PathNode {
-            pos :start.clone(),
+            pos: start.clone(),
             g: 0,
             h: start_h,
             cost: start_h,
@@ -39,12 +38,14 @@ impl Pathfinder {
 
         while let Some(PathNodePos(node_pos, _)) = open.pop() {
             // We keep track of how fra we've traveled from the start
-            let node_g : u32;
+            let node_g: u32;
             {
-                let (node, _parent) = nodes.get(&node_pos).expect("Popped node from priority queue that's not in the known space");
+                let (node, _parent) = nodes
+                    .get(&node_pos)
+                    .expect("Popped node from priority queue that's not in the known space");
                 node_g = node.g;
             }
-            
+
             let neighbours = grid.neighbours(&node_pos);
             let in_bound_neighbours = neighbours
                 .into_iter()
@@ -68,12 +69,12 @@ impl Pathfinder {
                 // TODO: Check if node is pathable
                 let parent_node = Some(node_pos.clone());
                 let new_node = PathNode {
-                    pos :neigh_pos.clone(),
+                    pos: neigh_pos.clone(),
                     g: g,
                     h: h,
                     cost: g + h,
                 };
-                
+
                 open.push(PathNodePos(new_node.pos.clone(), new_node.cost));
                 close.insert(neigh_pos.clone());
                 nodes.set(new_node, parent_node);
@@ -87,7 +88,7 @@ impl Pathfinder {
         let mut next_pos = end.clone();
         let mut result = Vec::<PathNode>::new();
 
-        'walk : while let Some((node, maybe_parent)) = space.take(&next_pos) {
+        'walk: while let Some((node, maybe_parent)) = space.take(&next_pos) {
             result.push(node);
             match maybe_parent {
                 Some(parent_pos) => next_pos = parent_pos,
@@ -110,7 +111,7 @@ impl Default for Pathfinder {
 pub struct Path(Vec<PathNode>);
 
 /// Container to hold nodes that have been searched
-/// 
+///
 /// Nodes are stored with an optional parent position, which is used
 /// to track the path of nodes.
 struct PathSpace {
@@ -120,9 +121,8 @@ struct PathSpace {
 
 impl PathSpace {
     fn with_size(x: u32, y: u32, z: u32) -> PathSpace {
-        let data : Vec<Option<(PathNode, Option<GridPosition>)>> = (0..(x*y*z))
-            .map(|_| None)
-            .collect();
+        let data: Vec<Option<(PathNode, Option<GridPosition>)>> =
+            (0..(x * y * z)).map(|_| None).collect();
 
         PathSpace {
             data,
@@ -145,7 +145,7 @@ impl PathSpace {
 
     fn take(&mut self, pos: &GridPosition) -> Option<(PathNode, Option<GridPosition>)> {
         let index = grid_index(&self.size, &pos);
-        let mut result : Option<(PathNode, Option<GridPosition>)> = None;
+        let mut result: Option<(PathNode, Option<GridPosition>)> = None;
         ::std::mem::swap(&mut result, &mut self.data[index]);
         result
     }
@@ -218,9 +218,6 @@ impl PathResults {
     }
 }
 
-
-
-
 pub struct PathfindingSystem;
 
 impl<'a> System<'a> for PathfindingSystem {
@@ -247,7 +244,12 @@ mod test {
         let pathfinder = Pathfinder::new();
 
         {
-            let path = pathfinder.find_path(&grid, &GridPosition::new(0, 0, 0), &GridPosition::new(10, 10, 0))
+            let path = pathfinder
+                .find_path(
+                    &grid,
+                    &GridPosition::new(0, 0, 0),
+                    &GridPosition::new(10, 10, 0),
+                )
                 .expect("Failed to find path");
             assert_eq!(GridPosition::new(0, 0, 0), path.0[0].pos);
             assert_eq!(GridPosition::new(2, 2, 0), path.0[2].pos);

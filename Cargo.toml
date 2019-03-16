@@ -3,6 +3,7 @@ name = "cave"
 version = "0.1.0"
 authors = ["Willem Victor <wvictor@retrorabbit.co.za>"]
 edition = "2018"
+build = "build.rs"
 
 [dependencies]
 nalgebra = "0.17"
@@ -11,6 +12,13 @@ piston = "0.42.0"
 piston2d-graphics = "0.30.0"
 pistoncore-glutin_window = "0.54.0"
 piston2d-opengl_graphics = "0.59.0"
+piston2d-sprite = "0.50.0"
 shred = "0.7.1"
 specs = "0.14"
+specs-derive = "0.4"
 rayon = "1.0"
+
+[build-dependencies]
+fs_extra = "1.1.0"
+glob = "0.2.*"
+itertools = "0.7.*"

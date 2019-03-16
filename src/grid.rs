@@ -1,8 +1,7 @@
-
 use na::Vector3;
 
 // TODO: Make 3D
-const OFFSETS : [(i32, i32, i32); 8] = [
+const OFFSETS: [(i32, i32, i32); 8] = [
     (-1, -1, 0),
     (0, -1, 0),
     (1, -1, 0),
@@ -17,22 +16,22 @@ const OFFSETS : [(i32, i32, i32); 8] = [
 /// a 3D cube size and a grid position.
 #[inline]
 pub fn grid_index(size: &Vector3<u32>, pos: &GridPosition) -> usize {
-        let x = pos.x() as u32;
-        let y = pos.y() as u32;
-        let z = pos.z() as u32;
-        (x + (y * size.x) + (z * (size.x * size.y))) as usize
+    let x = pos.x() as u32;
+    let y = pos.y() as u32;
+    let z = pos.z() as u32;
+    (x + (y * size.x) + (z * (size.x * size.y))) as usize
 }
 
 /// Return a one dimensional array or vector index given
 /// a 3D cube size and a grid position.
-/// 
+///
 /// Similar to `grid_index` but takes unsigned ints
 #[inline]
 pub fn grid_index_u(size: &Vector3<u32>, pos: &(u32, u32, u32)) -> usize {
-        let x = pos.0;
-        let y = pos.1;
-        let z = pos.2;
-        (x + (y * size.x) + (z * (size.x * size.y))) as usize
+    let x = pos.0;
+    let y = pos.1;
+    let z = pos.2;
+    (x + (y * size.x) + (z * (size.x * size.y))) as usize
 }
 
 /// 3-Dimensional Grid
@@ -56,11 +55,7 @@ impl Grid {
 
         for i in 0..8 {
             let offset = OFFSETS[i];
-            let v = Vector3::<i32>::new(
-                pos.0.x + offset.0,
-                pos.0.y + offset.1,
-                pos.0.z + offset.2,
-            );
+            let v = Vector3::<i32>::new(pos.0.x + offset.0, pos.0.y + offset.1, pos.0.z + offset.2);
             let new_pos = GridPosition(v);
             n[i] = if self.in_bounds(&new_pos) {
                 Some(new_pos)

@@ -15,6 +15,7 @@ use opengl_graphics::{ GlGraphics, OpenGL };
 use specs::{DispatcherBuilder, World};
 
 mod grid;
+mod option;
 mod pathfinder;
 
 use grid::Grid;

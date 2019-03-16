@@ -3,6 +3,7 @@ use nalgebra::Vector3;
 use specs::{System, Write, Read};
 
 use super::grid::{Grid, GridPosition, grid_index, grid_index_u};
+use super::option::*;
 
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet, VecDeque};
@@ -58,7 +59,7 @@ impl Pathfinder {
                 // Check if we've reached our destination
                 if &node_pos == end {
                     // Trace the path back to start
-
+                    return Some(Pathfinder::trace_path(&end, &mut nodes));
                 }
 
                 let g = &node_g + 1;
@@ -80,6 +81,23 @@ impl Pathfinder {
         }
 
         None
+    }
+
+    fn trace_path(end: &GridPosition, space: &mut PathSpace) -> Path {
+        let mut next_pos = end.clone();
+        let mut result = Vec::<PathNode>::new();
+
+        'walk : while let Some((node, maybe_parent)) = space.take(&next_pos) {
+            result.push(node);
+            match maybe_parent {
+                Some(parent_pos) => next_pos = parent_pos,
+                None => break 'walk,
+            }
+        }
+
+        // Tracing is backwards, from end to start
+        result.reverse();
+        Path(result)
     }
 }
 
@@ -123,6 +141,20 @@ impl PathSpace {
             Some(in_bounds_node) => in_bounds_node.as_ref(),
             None => None,
         }
+    }
+
+    fn take(&mut self, pos: &GridPosition) -> Option<(PathNode, Option<GridPosition>)> {
+        let index = grid_index(&self.size, &pos);
+        let mut result : Option<(PathNode, Option<GridPosition>)> = None;
+        ::std::mem::swap(&mut result, &mut self.data[index]);
+        result
+    }
+
+    fn get_parent(&self, pos: &GridPosition) -> Option<&PathNode> {
+        self.get(pos)
+            .and_then(|(_node, maybe_parent)| maybe_parent.as_ref())
+            .and_then(|parent_pos| self.get(parent_pos))
+            .and_then(|(parent_node, _)| Some(parent_node))
     }
 
     fn set(&mut self, node: PathNode, parent: Option<GridPosition>) {
@@ -215,7 +247,13 @@ mod test {
         let pathfinder = Pathfinder::new();
 
         {
-            pathfinder.find_path(&grid, &GridPosition::new(0, 0, 0), &GridPosition::new(127, 127, 0));
+            let path = pathfinder.find_path(&grid, &GridPosition::new(0, 0, 0), &GridPosition::new(10, 10, 0))
+                .expect("Failed to find path");
+            assert_eq!(GridPosition::new(0, 0, 0), path.0[0].pos);
+            assert_eq!(GridPosition::new(2, 2, 0), path.0[2].pos);
+            assert_eq!(GridPosition::new(5, 5, 0), path.0[5].pos);
+            assert_eq!(GridPosition::new(10, 10, 0), path.0[10].pos);
+            assert_eq!(11, path.0.len());
         }
     }
 }

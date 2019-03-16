@@ -28,7 +28,7 @@ impl Isometric {
     }
 
     /// Convert 3D Cartesian coordinates to 2D Isometric Coordinates
-    pub fn cart_to_iso<N>(pos: na::Vector3<N>) -> na::Vector2<N>
+    pub fn cart_to_iso<N>(pos: na::Vector3<N>) -> na::Vector3<N>
     where
         N : na::Scalar + nt::Num + nt::NumCast,
     {
@@ -36,7 +36,18 @@ impl Isometric {
         let _4 : N = nt::NumCast::from(4).unwrap();
         let x = (pos.x - pos.y) / _2;
         let y = (pos.x + pos.y) / _4;
-        na::Vector2::new(x, y - pos.z)
+        na::Vector3::new(x, y, pos.z)
+    }
+
+    pub fn iso_to_cart<N>(pos: na::Vector3<N>) -> na::Vector3<N>
+    where
+        N : na::Scalar + nt::Num + nt::NumCast,
+    {
+        let _2 : N = nt::NumCast::from(2).unwrap();
+        let _4 : N = nt::NumCast::from(4).unwrap();
+        let x = (pos.x * _2 + pos.y * _4) / _2;
+        let y = pos.y * _4 - x;
+        na::Vector3::new(x, y, pos.z)
     }
 }
 
@@ -44,21 +55,35 @@ impl Isometric {
 mod test {
     use super::*;
 
-    use na::{Vector2, Vector3};
+    use na::Vector3;
 
     #[test]
-    fn test_cart_to_iso()
-    {
+    fn test_cart_to_iso() {
         // Four corners of a tile
-        assert_eq!(Vector2::<f32>::new(0., 0.), Isometric::cart_to_iso(Vector3::<f32>::new(0., 0., 0.)));
-        assert_eq!(Vector2::<f32>::new(0.5, 0.25), Isometric::cart_to_iso(Vector3::<f32>::new(1., 0., 0.)));
-        assert_eq!(Vector2::<f32>::new(0., 0.5), Isometric::cart_to_iso(Vector3::<f32>::new(1., 1., 0.)));
-        assert_eq!(Vector2::<f32>::new(-0.5, 0.25), Isometric::cart_to_iso(Vector3::<f32>::new(0., 1., 0.)));
+        assert_eq!(Vector3::<f32>::new(0., 0., 0.), Isometric::cart_to_iso(Vector3::<f32>::new(0., 0., 0.)));
+        assert_eq!(Vector3::<f32>::new(0.5, 0.25, 0.), Isometric::cart_to_iso(Vector3::<f32>::new(1., 0., 0.)));
+        assert_eq!(Vector3::<f32>::new(0., 0.5, 0.), Isometric::cart_to_iso(Vector3::<f32>::new(1., 1., 0.)));
+        assert_eq!(Vector3::<f32>::new(-0.5, 0.25, 0.), Isometric::cart_to_iso(Vector3::<f32>::new(0., 1., 0.)));
 
         // Tile in negative coordinates
-        assert_eq!(Vector2::<f32>::new(0., 0.), Isometric::cart_to_iso(Vector3::<f32>::new(0., 0., 0.)));
-        assert_eq!(Vector2::<f32>::new(-0.5, -0.25), Isometric::cart_to_iso(Vector3::<f32>::new(-1., 0., 0.)));
-        assert_eq!(Vector2::<f32>::new(0., -0.5), Isometric::cart_to_iso(Vector3::<f32>::new(-1., -1., 0.)));
-        assert_eq!(Vector2::<f32>::new(0.5, -0.25), Isometric::cart_to_iso(Vector3::<f32>::new(0., -1., 0.)));
+        assert_eq!(Vector3::<f32>::new(0., 0., 0.), Isometric::cart_to_iso(Vector3::<f32>::new(0., 0., 0.)));
+        assert_eq!(Vector3::<f32>::new(-0.5, -0.25, 0.), Isometric::cart_to_iso(Vector3::<f32>::new(-1., 0., 0.)));
+        assert_eq!(Vector3::<f32>::new(0., -0.5, 0.), Isometric::cart_to_iso(Vector3::<f32>::new(-1., -1., 0.)));
+        assert_eq!(Vector3::<f32>::new(0.5, -0.25, 0.), Isometric::cart_to_iso(Vector3::<f32>::new(0., -1., 0.)));
+    }
+
+    #[test]
+    fn test_iso_to_cart() {
+        // Four corners of a tile
+        assert_eq!(Vector3::<f32>::new(0., 0., 0.), Isometric::iso_to_cart(Vector3::<f32>::new(0., 0., 0.)));
+        assert_eq!(Vector3::<f32>::new(1., 0., 0.), Isometric::iso_to_cart(Vector3::<f32>::new(0.5, 0.25, 0.)));
+        assert_eq!(Vector3::<f32>::new(1., 1., 0.), Isometric::iso_to_cart(Vector3::<f32>::new(0., 0.5, 0.)));
+        assert_eq!(Vector3::<f32>::new(0., 1., 0.), Isometric::iso_to_cart(Vector3::<f32>::new(-0.5, 0.25, 0.)));
+
+        // Tile in negative coordinates
+        assert_eq!(Vector3::<f32>::new(0., 0., 0.), Isometric::iso_to_cart(Vector3::<f32>::new(0., 0., 0.)));
+        assert_eq!(Vector3::<f32>::new(-1., 0., 0.), Isometric::iso_to_cart(Vector3::<f32>::new(-0.5, -0.25, 0.)));
+        assert_eq!(Vector3::<f32>::new(-1., -1., 0.), Isometric::iso_to_cart(Vector3::<f32>::new(0., -0.5, 0.)));
+        assert_eq!(Vector3::<f32>::new(0., -1., 0.), Isometric::iso_to_cart(Vector3::<f32>::new(0.5, -0.25, 0.)));
     }
 }

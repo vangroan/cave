@@ -35,9 +35,13 @@ impl Pathfinder {
 
 
         while let Some(node) = open.pop() {
+            let neighbours = grid.neighbours(&node.pos);
+            let in_bound_neighbours = neighbours
+                .into_iter()
+                .filter_map(|maybe_neigh| maybe_neigh.as_ref());
 
-            for neigh in grid.neighbours(&node.pos).into_iter() {
-
+            for neigh in in_bound_neighbours {
+                
             }
         }
     }

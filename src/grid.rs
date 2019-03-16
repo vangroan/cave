@@ -1,16 +1,19 @@
 
+use std::iter::IntoIterator;
+use std::marker::PhantomData;
+
 use na::{Vector3};
 
 // TODO: Make 3D
-const OFFSETS : [Vector3<i32>; 8] = [
-    Vector3::new(-1, -1, 0),
-    Vector3::new(0, -1, 0),
-    Vector3::new(1, -1, 0),
-    Vector3::new(-1, 0, 0),
-    Vector3::new(1, 0, 0),
-    Vector3::new(-1, 1, 0),
-    Vector3::new(0, 1, 0),
-    Vector3::new(1, 1, 0),
+const OFFSETS : [(i32, i32, i32); 8] = [
+    (-1, -1, 0),
+    (0, -1, 0),
+    (1, -1, 0),
+    (-1, 0, 0),
+    (1, 0, 0),
+    (-1, 1, 0),
+    (0, 1, 0),
+    (1, 1, 0),
 ];
 
 /// 3-Dimensional Grid
@@ -25,13 +28,19 @@ impl Grid {
         }
     }
 
-    pub fn neighbours(&self, pos: &GridPosition) -> Neighbours {
-        let mut n = Neighbours([None, None, None, None, None, None, None, None]);
+    pub fn neighbours(&self, pos: &GridPosition) -> [Option<GridPosition>; 8] {
+        let mut n = [None, None, None, None, None, None, None, None];
 
         for i in 0..8 {
-            let v = GridPosition(pos.0 + OFFSETS[i]);
-            n.0[i] = if self.in_bounds(&v) {
-                Some(v)
+            let offset = OFFSETS[i];
+            let v = Vector3::<i32>::new(
+                pos.0.x + offset.0,
+                pos.0.y + offset.1,
+                pos.0.z + offset.2,
+            );
+            let new_pos = GridPosition(v);
+            n[i] = if self.in_bounds(&new_pos) {
+                Some(new_pos)
             } else {
                 None
             }
@@ -44,39 +53,6 @@ impl Grid {
         pos.x() >= 0 && pos.x() < self.size.x as i32 && pos.y() >= 0 && pos.y() < self.size.y as i32
     }
 }
-
-pub struct Neighbours([Option<GridPosition>; 8]);
-
-impl Neighbours {
-    pub fn into_iter(self) -> Iter {
-        Iter::new(self.0.into_iter().filter_map(|maybe_pos| *maybe_pos))
-    }
-}
-
-pub struct Iter {
-    // TODO: Remove heap alloc
-    inner: Box<Iterator<Item = GridPosition>>,
-}
-
-impl Iter {
-    fn new<I>(inner: I) -> Self
-    where
-        I: Iterator<Item = GridPosition> + 'static
-    {
-        Iter {
-            inner: Box::new(inner),
-        }
-    }
-}
-
-impl Iterator for Iter {
-    type Item = GridPosition;
-
-    fn next(&mut self) -> Option<GridPosition> {
-        self.inner.next()
-    }
-}
-
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct GridPosition(Vector3<i32>);

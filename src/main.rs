@@ -34,6 +34,7 @@ use grid::Grid;
 use isometric::Isometric;
 use pathfinder::{PathRequests, PathResults, Pathfinder, PathfindingSystem};
 use position::Position;
+use sort::{DepthBuffer, IsometricSorter};
 use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{TileObj, Tilemap};
 
@@ -87,19 +88,30 @@ fn main() {
         .build()
         .unwrap();
 
+    // Map Size
+    const MAP_WIDTH: u32 = 128;
+    const MAP_HEIGHT: u32 = 128;
+    const MAP_DEPTH: u32 = 128;
+
     // Setup ECS
     let mut world = World::new();
-    world.add_resource(Grid::with_size(128, 128, 128));
-    world.add_resource(Tilemap::with_size(128, 128, 128));
+    world.add_resource(Grid::with_size(MAP_WIDTH, MAP_HEIGHT, MAP_DEPTH));
+    world.add_resource(Tilemap::with_size(MAP_WIDTH, MAP_HEIGHT, MAP_DEPTH));
     world.add_resource(Pathfinder::new());
     world.add_resource(PathRequests::new());
     world.add_resource(PathResults::new());
+    world.add_resource(DepthBuffer::new());
     world.register::<TileObj>();
     world.register::<Sprite<Texture>>();
     world.register::<Position>();
 
     let mut update_dispatcher = DispatcherBuilder::new()
         .with(PathfindingSystem, "pathfinder", &[])
+        .with(
+            IsometricSorter::with_size(MAP_WIDTH, MAP_HEIGHT, MAP_DEPTH),
+            "isometric_sorter",
+            &[],
+        )
         .build();
     let mut render_dispatcher = DispatcherBuilder::new()
         .with_thread_local(SpriteRenderer::from_graphics(GlGraphics::new(opengl)))
@@ -112,8 +124,14 @@ fn main() {
 
     for x in 0..10 {
         for y in 0..10 {
-            for z in (0..10).rev() {
-                if x + y - z > 7 {
+            for z in 0..10 {
+                // if x + y + z > 7 {
+                //     continue;
+                // }
+                // if (x + y + z) % 2 == 0 {
+                //     continue;
+                // }
+                if x >= 5 && y >= 5 && z >= 5 {
                     continue;
                 }
                 const S: f64 = 80.;
@@ -124,11 +142,12 @@ fn main() {
                     z as f64 * D,
                 ));
                 let mut sprite = Sprite::from_texture(tex.clone());
-                sprite.set_position(pos.x, pos.y + pos.z);
+                sprite.set_position(pos.x, pos.y - pos.z);
+                sprite.set_anchor(0.5, 70. / 90.);
 
                 world
                     .create_entity()
-                    .with(Position::new(pos.x, pos.y, pos.z))
+                    .with(Position::new(x as f64, y as f64, z as f64))
                     .with(sprite)
                     .build();
             }

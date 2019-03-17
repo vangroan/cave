@@ -7,6 +7,8 @@ use opengl_graphics::{GlGraphics, Texture};
 use piston::input::*;
 use specs::prelude::*;
 
+use crate::sort::DepthBuffer;
+
 #[derive(Component)]
 #[storage(DenseVecStorage)]
 pub struct Sprite<I: ImageSize + Send + Sync + 'static> {
@@ -45,6 +47,26 @@ where
     #[inline(always)]
     pub fn set_position(&mut self, x: f64, y: f64) {
         self.translate = Vector2::new(x, y)
+    }
+
+    #[inline(always)]
+    pub fn anchor(&self) -> &Vector2<f64> {
+        &self.anchor
+    }
+
+    #[inline(always)]
+    pub fn set_anchor(&mut self, x: f64, y: f64) {
+        self.anchor = Vector2::new(x, y)
+    }
+
+    #[inline(always)]
+    pub fn depth(&mut self) -> i32 {
+        self.depth
+    }
+
+    #[inline(always)]
+    pub fn set_depth(&mut self, depth: i32) {
+        self.depth = depth
     }
 
     pub fn draw<G>(&self, transform: Matrix2d, g: &mut G)
@@ -95,27 +117,47 @@ impl SpriteRenderer {
 }
 
 impl<'a> System<'a> for SpriteRenderer {
-    type SystemData = (Read<'a, OnRender>, ReadStorage<'a, Sprite<Texture>>);
+    type SystemData = (
+        Entities<'a>,
+        Read<'a, OnRender>,
+        ReadStorage<'a, Sprite<Texture>>,
+        Read<'a, DepthBuffer>,
+    );
 
     fn run(&mut self, data: Self::SystemData) {
         use graphics::*;
         use specs::Join;
 
         let SpriteRenderer { gl, .. } = self;
-        let (on_render, sprites) = data;
+        let (entities, on_render, sprites, buffer) = data;
 
         const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+        const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+
+        let square = rectangle::square(0.0, 0.0, 10.0);
 
         gl.draw(on_render.args().viewport(), |c, gl| {
             // Clear the screen.
             clear(BLACK, gl);
 
-            // TODO: Camera
-            let transform = c.transform;
+            // Center of screen
+            let (x, y) = (on_render.args().width / 2.0, on_render.args().height / 2.0);
 
-            for sprite in sprites.join() {
-                sprite.draw(transform, gl);
+            // TODO: Camera
+            let transform = c.transform.trans(x, y);
+
+            for item in buffer.contents() {
+                let e = entities.entity(item.entity_id());
+                if let Some(sprite) = sprites.get(e) {
+                    sprite.draw(transform, gl);
+                }
             }
+
+            rectangle(RED, square, transform, gl);
+
+            // for sprite in sprites.join() {
+            //     sprite.draw(transform, gl);
+            // }
         });
     }
 }

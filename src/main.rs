@@ -126,7 +126,8 @@ fn main() {
                 let mut sprite = Sprite::from_texture(tex.clone());
                 sprite.set_position(pos.x, pos.y + pos.z);
 
-                world.create_entity()
+                world
+                    .create_entity()
                     .with(Position::new(pos.x, pos.y, pos.z))
                     .with(sprite)
                     .build();

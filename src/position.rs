@@ -1,4 +1,3 @@
-
 use na::Vector3;
 use specs::prelude::*;
 

@@ -1,32 +1,31 @@
 //! Pigeonhole Sort
-#![allow(dead_code)]
 
-use std::fmt::Debug;
-use std::collections::BTreeMap;
 use std::collections::btree_map;
+use std::collections::BTreeMap;
 use std::mem;
 
-pub const HOLE_CAPACITY : u8 = 32;
+pub const HOLE_CAPACITY: u8 = 32;
 
-pub struct PigeonholeSort<T: Default + Debug> {
+pub struct PigeonholeSort<T: Default> {
     min: i32,
     max: i32,
     range: usize,
 
     /// The buckets where elements will be sorted into
-    /// 
+    ///
     /// The first item of the tuple is a cursor that points to the next open
     /// element in the array.
     holes: Vec<(u8, [T; HOLE_CAPACITY as usize])>,
 
     /// Emergency buckets used when the main container goes over capacity
-    overflow : BTreeMap<usize, Vec<T>>,
+    overflow: BTreeMap<usize, Vec<T>>,
 }
 
 impl<T> PigeonholeSort<T>
 where
-    T : Default + Debug
+    T: Default,
 {
+    // TODO: Change bucket key to something generic like Scalar
     pub fn new(min: i32, max: i32) -> Self {
         let sort_min = ::std::cmp::min(min, max);
         let sort_max = ::std::cmp::max(min, max);
@@ -49,9 +48,13 @@ where
 
     pub fn sort_into<F>(&mut self, source: &mut [T], target: &mut [T], extract_key: F)
     where
-        F : Fn(&T) -> i32
+        F: Fn(&T) -> i32,
     {
-        assert_eq!(source.len(), target.len(), "Source and target slices must be the same length");
+        assert_eq!(
+            source.len(),
+            target.len(),
+            "Source and target slices must be the same length"
+        );
 
         let mut in_overflow = false;
 
@@ -62,11 +65,9 @@ where
 
             if cursor >= HOLE_CAPACITY {
                 // If we're over the capacity, we ignore need to fall back on the emergency buckets.
-                let mut el : T = Default::default();
+                let mut el: T = Default::default();
                 mem::swap(&mut source[i], &mut el);
-                self.overflow.entry(index)
-                    .or_insert(vec![])
-                    .push(el);
+                self.overflow.entry(index).or_insert(vec![]).push(el);
                 in_overflow = true;
             } else {
                 mem::swap(&mut source[i], &mut self.holes[index].1[cursor as usize]);
@@ -75,7 +76,7 @@ where
         }
 
         // Read contents from buckets into target
-        let mut k : usize = 0;
+        let mut k: usize = 0;
         for i in 0..self.range {
             let count = self.holes[i].0 as usize;
 
@@ -121,7 +122,7 @@ mod test {
         let max_depth = 128 + 128 + 128;
         let mut sorter = PigeonholeSort::<(Depth, EntityId)>::new(0, max_depth);
 
-        let mut source : Vec<(Depth, EntityId)> = vec![
+        let mut source: Vec<(Depth, EntityId)> = vec![
             (1, 10001),
             (6, 10002),
             (9, 10003),
@@ -129,7 +130,7 @@ mod test {
             (4, 10005),
             (6, 10006),
         ];
-        let mut target : Vec<(Depth, EntityId)> = vec![(0, 0); source.len()];
+        let mut target: Vec<(Depth, EntityId)> = vec![(0, 0); source.len()];
 
         sorter.sort_into(&mut source, &mut target, |pair| pair.0);
 

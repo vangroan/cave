@@ -1,5 +1,4 @@
-
-use opengl_graphics::{Texture};
+use opengl_graphics::Texture;
 use specs::prelude::*;
 
 use crate::position::Position;
@@ -15,15 +14,9 @@ impl IsometricSorter {
 }
 
 impl<'a> System<'a> for IsometricSorter {
-    type SystemData = (
-        ReadStorage<'a, Position>,
-        WriteStorage<'a, Sprite<Texture>>,
-    );
+    type SystemData = (ReadStorage<'a, Position>, WriteStorage<'a, Sprite<Texture>>);
 
     fn run(&mut self, data: Self::SystemData) {
         let (positions, sprites) = data;
     }
 }
-
-
-

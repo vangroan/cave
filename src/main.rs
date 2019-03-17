@@ -6,7 +6,6 @@ extern crate opengl_graphics;
 extern crate piston;
 extern crate shred;
 extern crate specs;
-extern crate sprite;
 #[macro_use]
 extern crate specs_derive;
 extern crate rayon;
@@ -16,28 +15,28 @@ use opengl_graphics::{GlGraphics, OpenGL, Texture, TextureSettings};
 use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
-use specs::{DispatcherBuilder, World};
-use sprite::{Scene, Sprite};
+use specs::prelude::*;
 
 use std::path::PathBuf;
-use std::rc::Rc;
+use std::sync::Arc;
 
 mod grid;
 mod isometric;
 mod option;
 mod pathfinder;
+mod sprite;
 mod tilemap;
 
 use grid::Grid;
 use isometric::Isometric;
 use pathfinder::{PathRequests, PathResults, Pathfinder, PathfindingSystem};
+use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{TileObj, Tilemap};
 
 pub struct App {
     gl: GlGraphics, // OpenGL drawing backend.
     rotation: f64,  // Rotation for the square.
     world: World,
-    scene: Scene<Texture>,
 }
 
 impl App {
@@ -52,19 +51,18 @@ impl App {
         let rotation = self.rotation;
         let (x, y) = (args.width / 4.0, args.height / 4.0);
 
-        let App { gl, scene, .. } = self;
+        let App { gl, .. } = self;
 
         gl.draw(args.viewport(), |c, gl| {
             // Clear the screen.
             clear(BLACK, gl);
 
             let transform = c.transform.trans(x, y);
-            //.rot_rad(rotation)
-            //.trans(-25.0, -25.0);
+            // .rot_rad(rotation)
+            // .trans(-25.0, -25.0);
 
             // Draw a box rotating around the middle of the screen.
             // rectangle(RED, square, transform, gl);
-            scene.draw(transform, gl);
         });
     }
 
@@ -93,51 +91,61 @@ fn main() {
     world.add_resource(PathRequests::new());
     world.add_resource(PathResults::new());
     world.register::<TileObj>();
+    world.register::<Sprite<Texture>>();
 
-    let mut dispatcher = DispatcherBuilder::new()
+    let mut update_dispatcher = DispatcherBuilder::new()
         .with(PathfindingSystem, "pathfinder", &[])
+        .build();
+    let mut render_dispatcher = DispatcherBuilder::new()
+        .with_thread_local(SpriteRenderer::from_graphics(GlGraphics::new(opengl)))
         .build();
 
     let sprite_path = PathBuf::from("resources/greybox.png");
     let sprite_settings = TextureSettings::new();
-    let mut scene = Scene::<Texture>::new();
-    let tex = Rc::new(Texture::from_path(sprite_path, &sprite_settings).unwrap());
+    // let mut scene = sprite2::Scene::<Texture>::new();
+    let tex = Arc::new(Texture::from_path(sprite_path, &sprite_settings).unwrap());
 
     for x in 0..10 {
         for y in 0..10 {
             for z in (0..10).rev() {
-                const s: f64 = 80.;
-                const d: f64 = 50.;
+                if x + y - z > 7 {
+                    continue;
+                }
+                const S: f64 = 80.;
+                const D: f64 = 50.;
                 let pos = Isometric::cart_to_iso(na::Vector3::<f64>::new(
-                    x as f64 * s,
-                    y as f64 * s,
-                    z as f64 * d,
+                    x as f64 * S,
+                    y as f64 * S,
+                    z as f64 * D,
                 ));
                 let mut sprite = Sprite::from_texture(tex.clone());
                 sprite.set_position(pos.x, pos.y + pos.z);
-                scene.add_child(sprite);
+
+                world.create_entity().with(sprite).build();
             }
         }
     }
 
     // Create a new game and run it.
-    let mut app = App {
-        gl: GlGraphics::new(opengl),
-        rotation: 0.0,
-        world,
-        scene,
-    };
+    // let mut app = App {
+    //     gl: GlGraphics::new(opengl),
+    //     rotation: 0.0,
+    //     world,
+    // };
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
         if let Some(r) = e.render_args() {
-            app.render(&r);
+            // app.render(&r);
+            world.add_resource(OnRender::new(r));
+            update_dispatcher.dispatch(&mut world.res);
+            world.maintain();
         }
 
         if let Some(u) = e.update_args() {
-            app.update(&u);
-            dispatcher.dispatch(&mut app.world.res);
-            app.world.maintain();
+            // app.update(&u);
+            render_dispatcher.dispatch(&mut world.res);
+            // app.world.maintain();
         }
     }
 }

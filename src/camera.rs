@@ -1,8 +1,7 @@
-
 use specs::prelude::*;
 
 /// Isometric camera
-/// 
+///
 /// It's 3D position is it's lookat position
 #[derive(Component)]
 #[storage(DenseVecStorage)]

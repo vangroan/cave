@@ -87,13 +87,18 @@ fn main() {
         .build();
 
     let sprite_settings = TextureSettings::new();
-    let block_tex = Arc::new(Texture::from_path(PathBuf::from("resources/greybox.png"), &sprite_settings).unwrap());
-    let man_tex = Arc::new(Texture::from_path(PathBuf::from("resources/blueman.png"), &sprite_settings).unwrap());
+    let block_tex = Arc::new(
+        Texture::from_path(PathBuf::from("resources/greybox.png"), &sprite_settings).unwrap(),
+    );
+    let man_tex = Arc::new(
+        Texture::from_path(PathBuf::from("resources/blueman.png"), &sprite_settings).unwrap(),
+    );
 
     // Build Camera
-    world.create_entity()
+    let camera_id = world
+        .create_entity()
         .with(IsometricCamera::new(true))
-        .with(Position::new(0., 0., 10.))
+        .with(Position::new(0., 0., 5.))
         .build();
 
     // Build blocks
@@ -134,8 +139,8 @@ fn main() {
     // Build actors
     for x in 0..10 {
         for y in 0..10 {
-            const HALF_TILE_3D : f64 = 0.5;
-            let z = 11;
+            const HALF_TILE_3D: f64 = 0.5;
+            let z = 10;
             let pos = Isometric::cart_to_iso(&na::Vector3::<f64>::new(
                 (x as f64 + HALF_TILE_3D) * TILE_WIDTH_2D,
                 (y as f64 + HALF_TILE_3D) * TILE_WIDTH_2D,
@@ -144,10 +149,13 @@ fn main() {
             if (x + y) % 5 != 0 {
                 continue;
             }
+            if x >= 5 && y >= 5 && z >= 5 {
+                continue;
+            }
 
             let mut sprite = Sprite::from_texture(man_tex.clone());
             sprite.set_position(pos.x, pos.y - pos.z);
-            sprite.set_anchor(0.5, 1.0);
+            sprite.set_anchor(0.5, 1.1);
 
             world
                 .create_entity()
@@ -161,6 +169,53 @@ fn main() {
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
+        if let Some(Button::Keyboard(key)) = e.release_args() {
+            use specs::Join;
+
+            // TODO: Move input handling to systems
+            let entities = world.entities();
+            let cameras = world.read_storage::<IsometricCamera>();
+            let mut positions = world.write_storage::<Position>();
+            let maybe_camera = (&entities, &cameras, &positions)
+                .join()
+                .find(|(entity, camera, _position)| camera.is_current());
+            if let Some((entity, _camera, pos)) = maybe_camera {
+                match key {
+                    Key::Up => {
+                        positions
+                            .insert(entity, pos + &Position::new(1., 1., 0.))
+                            .unwrap();
+                    }
+                    Key::Down => {
+                        positions
+                            .insert(entity, pos + &Position::new(-1., -1., 0.))
+                            .unwrap();
+                    }
+                    Key::Left => {
+                        positions
+                            .insert(entity, pos + &Position::new(1., -1., 0.))
+                            .unwrap();
+                    }
+                    Key::Right => {
+                        positions
+                            .insert(entity, pos + &Position::new(-1., 1., 0.))
+                            .unwrap();
+                    }
+                    Key::Q => {
+                        positions
+                            .insert(entity, pos + &Position::new(0., 0., 1.))
+                            .unwrap();
+                    }
+                    Key::A => {
+                        positions
+                            .insert(entity, pos + &Position::new(0., 0., -1.))
+                            .unwrap();
+                    }
+                    _ => {}
+                }
+            }
+        }
+
         if let Some(r) = e.render_args() {
             // app.render(&r);
             world.add_resource(OnRender::new(r));
@@ -168,7 +223,7 @@ fn main() {
             world.maintain();
         }
 
-        if let Some(u) = e.update_args() {
+        if let Some(_u) = e.update_args() {
             // app.update(&u);
             render_dispatcher.dispatch(&mut world.res);
             // app.world.maintain();

@@ -1,4 +1,3 @@
-
 use specs::prelude::*;
 
 #[derive(Component)]

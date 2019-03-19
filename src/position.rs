@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use na::Vector3;
 use specs::prelude::*;
 
@@ -28,5 +30,12 @@ impl Position {
     #[inline(always)]
     pub fn to_vector(&self) -> &na::Vector3<f64> {
         &self.0
+    }
+}
+
+impl Add<&Position> for &Position {
+    type Output = Position;
+    fn add(self, rhs: &Position) -> Position {
+        Position(self.0 + rhs.0)
     }
 }

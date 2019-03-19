@@ -146,10 +146,11 @@ impl<'a> System<'a> for SpriteRenderer {
         let SpriteRenderer { gl, .. } = self;
         let (entities, on_render, cameras, sprites, position, buffer) = data;
 
-        let camera_pos = (&cameras, &position).join()
-                .find(|(camera, _position)| camera.is_current())
-                .map(|(_camera, position)| Isometric::cart_to_iso(position.to_vector()))
-                .unwrap_or(na::Vector3::new(0., 0., 0.));
+        let camera_pos = (&cameras, &position)
+            .join()
+            .find(|(camera, _position)| camera.is_current())
+            .map(|(_camera, position)| Isometric::cart_to_iso(position.to_vector()))
+            .unwrap_or(na::Vector3::new(0., 0., 0.));
         let camera_pos_2d = na::Vector2::<f64>::new(camera_pos.x, camera_pos.y + camera_pos.z);
 
         const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
@@ -159,12 +160,16 @@ impl<'a> System<'a> for SpriteRenderer {
 
         gl.draw(on_render.args().viewport(), |c, gl| {
             // Center of screen
-            let (offset_x, offset_y) = (on_render.args().width / 2.0, on_render.args().height / 2.0);
+            let (offset_x, offset_y) =
+                (on_render.args().width / 2.0, on_render.args().height / 2.0);
 
             // Clear the screen.
             clear(BLACK, gl);
 
-            let transform = c.transform.trans(camera_pos_2d.x * 80. + offset_x, camera_pos_2d.y * 50. + offset_y);
+            let transform = c.transform.trans(
+                camera_pos_2d.x * 80. + offset_x,
+                camera_pos_2d.y * 80. + offset_y,
+            );
 
             for item in buffer.contents() {
                 let e = entities.entity(item.entity_id());

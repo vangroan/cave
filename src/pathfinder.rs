@@ -221,24 +221,22 @@ impl PathResults {
 pub struct PathfindingSystem;
 
 impl<'a> System<'a> for PathfindingSystem {
-    type SystemData = (
-        Read<'a, Pathfinder>,
-        WriteStorage<'a, Pather>,
-    );
+    type SystemData = (Read<'a, Pathfinder>, WriteStorage<'a, Pather>);
 
     fn run(&mut self, data: Self::SystemData) {
         use rayon::prelude::*;
         use specs::ParJoin;
 
-        let (pathfinder, mut pathers, ) = data;
+        let (pathfinder, mut pathers) = data;
 
-        pathers.par_join()
+        pathers
+            .par_join()
             .filter(|pather| pather.needs_path())
-            .for_each(|pather| {
-                if let PathRequest::Request(end_pos) = pather.request() {
-                    
-                }
-            });
+            .for_each(
+                |pather| {
+                    if let PathRequest::Request(end_pos) = pather.request() {}
+                },
+            );
     }
 }
 

@@ -145,6 +145,10 @@ fn main() {
                 sprite.set_position(pos.x, pos.y - pos.z);
                 sprite.set_anchor(0.5, 70. / 90.);
 
+                // Lower blocks are darker
+                let c = 0.8 + (z as f32 / 50.);
+                sprite.set_color([c, c, c, 1.0]);
+
                 world
                     .create_entity()
                     .with(Position::new(x as f64, y as f64, z as f64))

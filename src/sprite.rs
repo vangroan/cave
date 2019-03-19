@@ -69,6 +69,16 @@ where
         self.depth = depth
     }
 
+    #[inline(always)]
+    pub fn color(&self) -> &Color {
+        &self.color
+    }
+
+    #[inline(always)]
+    pub fn set_color(&mut self, color: Color) {
+        self.color = color
+    }
+
     pub fn draw<G>(&self, transform: Matrix2d, g: &mut G)
     where
         G: Graphics<Texture = I>,

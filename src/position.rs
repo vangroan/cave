@@ -24,4 +24,9 @@ impl Position {
     pub fn z(&self) -> f64 {
         self.0.z
     }
+
+    #[inline(always)]
+    pub fn to_vector(&self) -> &na::Vector3<f64> {
+        &self.0
+    }
 }

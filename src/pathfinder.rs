@@ -1,5 +1,5 @@
 use nalgebra::Vector3;
-use specs::{Read, System, Write};
+use specs::prelude::*;
 
 use crate::grid::{grid_index, grid_index_u, Grid, GridPosition};
 use crate::option::*;
@@ -223,15 +223,61 @@ pub struct PathfindingSystem;
 impl<'a> System<'a> for PathfindingSystem {
     type SystemData = (
         Read<'a, Pathfinder>,
-        Write<'a, PathRequests>,
-        Write<'a, PathResults>,
+        WriteStorage<'a, Pather>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
         use rayon::prelude::*;
-        use specs::Join;
         use specs::ParJoin;
+
+        let (pathfinder, mut pathers, ) = data;
+
+        pathers.par_join()
+            .filter(|pather| pather.needs_path())
+            .for_each(|pather| {
+                if let PathRequest::Request(end_pos) = pather.request() {
+                    
+                }
+            });
     }
+}
+
+/// Marks an Entity as being able to search paths
+#[derive(Component)]
+#[storage(DenseVecStorage)]
+pub struct Pather {
+    request: PathRequest,
+}
+
+impl Pather {
+    pub fn new() -> Self {
+        Pather {
+            request: PathRequest::Nothing,
+        }
+    }
+
+    pub fn needs_path(&self) -> bool {
+        match self.request {
+            PathRequest::Request(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn take_request(&mut self) -> PathRequest {
+        let mut request = PathRequest::Nothing;
+        ::std::mem::swap(&mut request, &mut self.request);
+        request
+    }
+
+    pub fn request(&self) -> &PathRequest {
+        &self.request
+    }
+}
+
+pub enum PathRequest {
+    Request(GridPosition),
+    Ready(Path),
+    Nothing,
 }
 
 #[cfg(test)]

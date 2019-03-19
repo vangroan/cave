@@ -64,7 +64,7 @@ where
             let cursor = self.holes[index].0;
 
             if cursor >= HOLE_CAPACITY {
-                // If we're over the capacity, we ignore need to fall back on the emergency buckets.
+                // If we're over the capacity, we need to fall back on the slower emergency buckets.
                 let mut el: T = Default::default();
                 mem::swap(&mut source[i], &mut el);
                 self.overflow.entry(index).or_insert(vec![]).push(el);

@@ -18,13 +18,28 @@ impl Position {
     }
 
     #[inline(always)]
+    pub fn set_x(&mut self, val: f64) {
+        self.0.x = val;
+    }
+
+    #[inline(always)]
     pub fn y(&self) -> f64 {
         self.0.y
     }
 
     #[inline(always)]
+    pub fn set_y(&mut self, val: f64) {
+        self.0.y = val;
+    }
+
+    #[inline(always)]
     pub fn z(&self) -> f64 {
         self.0.z
+    }
+
+    #[inline(always)]
+    pub fn set_z(&mut self, val: f64) {
+        self.0.z = val;
     }
 
     #[inline(always)]

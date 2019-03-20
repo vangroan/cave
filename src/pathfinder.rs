@@ -2,7 +2,6 @@ use nalgebra::Vector3;
 use specs::prelude::*;
 
 use crate::grid::{grid_index, grid_index_u, Grid, GridPosition};
-use crate::option::*;
 
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet, VecDeque};
@@ -19,6 +18,7 @@ impl Pathfinder {
     }
 
     pub fn find_path(&self, grid: &Grid, start: &GridPosition, end: &GridPosition) -> Option<Path> {
+        println!("Calculating path");
         // Note the BinaryHeap is a max-heap
         let mut nodes = PathSpace::from_grid(&grid);
         let mut open: BinaryHeap<PathNodePos> = BinaryHeap::new();
@@ -221,22 +221,28 @@ impl PathResults {
 pub struct PathfindingSystem;
 
 impl<'a> System<'a> for PathfindingSystem {
-    type SystemData = (Read<'a, Pathfinder>, WriteStorage<'a, Pather>);
+    type SystemData = (
+        Read<'a, Pathfinder>,
+        Read<'a, Grid>,
+        WriteStorage<'a, Pather>,
+    );
 
-    fn run(&mut self, data: Self::SystemData) {
+    fn run(&mut self, (pathfinder, grid, mut pathers): Self::SystemData) {
         use rayon::prelude::*;
         use specs::ParJoin;
 
-        let (pathfinder, mut pathers) = data;
-
-        pathers
+        (&mut pathers)
             .par_join()
             .filter(|pather| pather.needs_path())
-            .for_each(
-                |pather| {
-                    if let PathRequest::Request(end_pos) = pather.request() {}
-                },
-            );
+            .for_each(|pather| {
+                let maybe_request = pather.take_request();
+                if let PathRequest::Request(start, end) = maybe_request {
+                    match pathfinder.find_path(&grid, &start, &end) {
+                        Some(path) => pather.request = PathRequest::Ready(path),
+                        None => pather.request = PathRequest::Failed,
+                    }
+                }
+            });
     }
 }
 
@@ -244,19 +250,35 @@ impl<'a> System<'a> for PathfindingSystem {
 #[derive(Component)]
 #[storage(DenseVecStorage)]
 pub struct Pather {
+    cursor: usize,
     request: PathRequest,
 }
 
 impl Pather {
     pub fn new() -> Self {
         Pather {
+            cursor: 0,
             request: PathRequest::Nothing,
+        }
+    }
+
+    pub fn with_request(start: GridPosition, end: GridPosition) -> Pather {
+        Pather {
+            cursor: 0,
+            request: PathRequest::Request(start, end),
         }
     }
 
     pub fn needs_path(&self) -> bool {
         match self.request {
-            PathRequest::Request(_) => true,
+            PathRequest::Request(_, _) => true,
+            _ => false,
+        }
+    }
+
+    pub fn has_path(&self) -> bool {
+        match self.request {
+            PathRequest::Ready(_) => true,
             _ => false,
         }
     }
@@ -270,11 +292,38 @@ impl Pather {
     pub fn request(&self) -> &PathRequest {
         &self.request
     }
+
+    pub fn next(&mut self) -> Option<&PathNode> {
+        if let PathRequest::Ready(ref mut path) = self.request {
+            if let Some(node) = path.0.get(self.cursor) {
+                self.cursor += 1;
+                Some(node)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn current(&self) -> Option<&PathNode> {
+        if let PathRequest::Ready(ref path) = self.request {
+            path.0.get(self.cursor)
+        } else {
+            None
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.cursor = 0;
+        self.request = PathRequest::Nothing;
+    }
 }
 
 pub enum PathRequest {
-    Request(GridPosition),
+    Request(GridPosition, GridPosition),
     Ready(Path),
+    Failed,
     Nothing,
 }
 
@@ -302,4 +351,8 @@ mod test {
             assert_eq!(11, path.0.len());
         }
     }
+
+    /// Ensure that when a path is impossible, we stop searching
+    #[test]
+    fn test_pathing_fail() {}
 }

@@ -72,6 +72,14 @@ impl Grid {
     }
 }
 
+impl Default for Grid {
+    fn default() -> Grid {
+        Grid {
+            size: na::Vector3::new(16, 16, 16),
+        }
+    }
+}
+
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct GridPosition(Vector3<i32>);
 
@@ -90,6 +98,10 @@ impl GridPosition {
 
     pub fn z(&self) -> i32 {
         self.0.z
+    }
+
+    pub fn vector(&self) -> &na::Vector3<i32> {
+        &self.0
     }
 }
 

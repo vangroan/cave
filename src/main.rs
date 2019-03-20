@@ -22,28 +22,29 @@ use std::sync::Arc;
 
 mod actor;
 mod camera;
+mod common;
 mod grid;
 mod isometric;
 mod option;
 mod pathfinder;
 mod pigeon;
 mod position;
+mod settings;
 mod sort;
 mod sprite;
 mod tilemap;
 
-use actor::Actor;
+use actor::{Actor, WalkerSystem};
 use camera::IsometricCamera;
-use grid::Grid;
+use common::DeltaTime;
+use grid::{Grid, GridPosition};
 use isometric::Isometric;
 use pathfinder::{Pather, Pathfinder, PathfindingSystem};
 use position::Position;
+use settings::{TILE_DEPTH_2D, TILE_WIDTH_2D};
 use sort::{DepthBuffer, IsometricSorter};
 use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{TileObj, Tilemap};
-
-const TILE_WIDTH_2D: f64 = 80.;
-const TILE_DEPTH_2D: f64 = 50.;
 
 fn main() {
     // Change this to OpenGL::V2_1 if not working.
@@ -81,6 +82,7 @@ fn main() {
             "isometric_sorter",
             &[],
         )
+        .with(WalkerSystem::new(), "walker", &[])
         .build();
     let mut render_dispatcher = DispatcherBuilder::new()
         .with_thread_local(SpriteRenderer::from_graphics(GlGraphics::new(opengl)))
@@ -95,7 +97,7 @@ fn main() {
     );
 
     // Build Camera
-    let camera_id = world
+    world
         .create_entity()
         .with(IsometricCamera::new(true))
         .with(Position::new(0., 0., 5.))
@@ -141,6 +143,7 @@ fn main() {
         for y in 0..10 {
             const HALF_TILE_3D: f64 = 0.5;
             let z = 10;
+            let grid_pos = GridPosition::new(x, y, z);
             let pos = Isometric::cart_to_iso(&na::Vector3::<f64>::new(
                 (x as f64 + HALF_TILE_3D) * TILE_WIDTH_2D,
                 (y as f64 + HALF_TILE_3D) * TILE_WIDTH_2D,
@@ -162,7 +165,7 @@ fn main() {
                 .with(Position::new(x as f64, y as f64, z as f64))
                 .with(sprite)
                 .with(Actor::new())
-                .with(Pather::new())
+                .with(Pather::with_request(grid_pos, GridPosition::new(0, 0, 10)))
                 .build();
         }
     }
@@ -178,7 +181,7 @@ fn main() {
             let mut positions = world.write_storage::<Position>();
             let maybe_camera = (&entities, &cameras, &positions)
                 .join()
-                .find(|(entity, camera, _position)| camera.is_current());
+                .find(|(_entity, camera, _position)| camera.is_current());
             if let Some((entity, _camera, pos)) = maybe_camera {
                 match key {
                     Key::Up => {
@@ -219,14 +222,13 @@ fn main() {
         if let Some(r) = e.render_args() {
             // app.render(&r);
             world.add_resource(OnRender::new(r));
-            update_dispatcher.dispatch(&mut world.res);
+            render_dispatcher.dispatch(&mut world.res);
             world.maintain();
         }
 
-        if let Some(_u) = e.update_args() {
-            // app.update(&u);
-            render_dispatcher.dispatch(&mut world.res);
-            // app.world.maintain();
+        if let Some(u) = e.update_args() {
+            world.add_resource(DeltaTime(u.dt));
+            update_dispatcher.dispatch(&mut world.res);
             world.maintain();
         }
     }

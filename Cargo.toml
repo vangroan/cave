@@ -5,17 +5,35 @@ authors = ["Willem Victor <wvictor@retrorabbit.co.za>"]
 edition = "2018"
 build = "build.rs"
 
+[[bench]]
+name = "benchmark"
+harness = false
+
+[lib]
+name = "cave"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cave"
+path = "src/bin.rs"
+
+[dev-dependencies]
+criterion = "0.2"
+
 [dependencies]
+crossbeam = "0.7"
 nalgebra = "0.17"
 num-traits = "0.2"
 piston = "0.42.0"
 piston2d-graphics = "0.30.0"
 pistoncore-glutin_window = "0.54.0"
 piston2d-opengl_graphics = "0.59.0"
+fps_counter = "1.0.0"
+rayon = "1.0"
 shred = "0.7.1"
 specs = "0.14"
 specs-derive = "0.4"
-rayon = "1.0"
+threadpool = "1.7"
 
 [build-dependencies]
 fs_extra = "1.1.0"

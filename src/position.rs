@@ -3,7 +3,7 @@ use std::ops::Add;
 use na::Vector3;
 use specs::prelude::*;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 #[storage(DenseVecStorage)]
 pub struct Position(Vector3<f64>);
 

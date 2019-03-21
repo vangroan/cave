@@ -67,8 +67,14 @@ impl Grid {
         n
     }
 
+    #[inline(always)]
     fn in_bounds(&self, pos: &GridPosition) -> bool {
-        pos.x() >= 0 && pos.x() < self.size.x as i32 && pos.y() >= 0 && pos.y() < self.size.y as i32
+        pos.x() >= 0
+            && pos.x() < self.size.x as i32
+            && pos.y() >= 0
+            && pos.y() < self.size.y as i32
+            && pos.z() >= 0
+            && pos.y() < self.size.y as i32
     }
 }
 

@@ -6,3 +6,5 @@ pub const TILE_HEIGHT_2D: f64 = 80.;
 
 /// Partial deepness of tile downwards, on screen
 pub const TILE_DEPTH_2D: f64 = 50.;
+
+pub const HALF_TILE_3D: f64 = 0.5;

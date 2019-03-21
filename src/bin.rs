@@ -1,14 +1,16 @@
+extern crate fps_counter;
 extern crate glutin_window;
 extern crate graphics;
 extern crate nalgebra as na;
 extern crate num_traits as nt;
 extern crate opengl_graphics;
 extern crate piston;
+extern crate rayon;
 extern crate shred;
 extern crate specs;
 #[macro_use]
 extern crate specs_derive;
-extern crate rayon;
+extern crate threadpool;
 
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{GlGraphics, OpenGL, Texture, TextureSettings};
@@ -58,9 +60,9 @@ fn main() {
         .unwrap();
 
     // Map Size
-    const MAP_WIDTH: u32 = 128;
-    const MAP_HEIGHT: u32 = 128;
-    const MAP_DEPTH: u32 = 128;
+    const MAP_WIDTH: u32 = 16;
+    const MAP_HEIGHT: u32 = 16;
+    const MAP_DEPTH: u32 = 16;
 
     // Setup ECS
     let mut world = World::new();
@@ -76,7 +78,7 @@ fn main() {
     world.register::<Position>();
 
     let mut update_dispatcher = DispatcherBuilder::new()
-        .with(PathfindingSystem, "pathfinder", &[])
+        .with(PathfindingSystem::new(), "pathfinder", &[])
         .with(
             IsometricSorter::with_size(MAP_WIDTH, MAP_HEIGHT, MAP_DEPTH),
             "isometric_sorter",
@@ -116,13 +118,16 @@ fn main() {
                 if x >= 5 && y >= 5 && z >= 5 {
                     continue;
                 }
+                if z == 9 && (x % 2 == 0 || y % 2 == 0) {
+                    continue;
+                }
                 let pos = Isometric::cart_to_iso(&na::Vector3::<f64>::new(
                     x as f64 * TILE_WIDTH_2D,
                     y as f64 * TILE_WIDTH_2D,
                     z as f64 * TILE_DEPTH_2D,
                 ));
                 let mut sprite = Sprite::from_texture(block_tex.clone());
-                sprite.set_position(pos.x, pos.y - pos.z);
+                // sprite.set_position(pos.x, pos.y - pos.z);
                 sprite.set_anchor(0.5, 70. / 90.);
 
                 // Lower blocks are darker
@@ -142,7 +147,7 @@ fn main() {
     for x in 0..10 {
         for y in 0..10 {
             const HALF_TILE_3D: f64 = 0.5;
-            let z = 10;
+            let z = 9;
             let grid_pos = GridPosition::new(x, y, z);
             let pos = Isometric::cart_to_iso(&na::Vector3::<f64>::new(
                 (x as f64 + HALF_TILE_3D) * TILE_WIDTH_2D,
@@ -157,7 +162,7 @@ fn main() {
             }
 
             let mut sprite = Sprite::from_texture(man_tex.clone());
-            sprite.set_position(pos.x, pos.y - pos.z);
+            // sprite.set_position(pos.x, pos.y - pos.z);
             sprite.set_anchor(0.5, 1.1);
 
             world
@@ -165,7 +170,7 @@ fn main() {
                 .with(Position::new(x as f64, y as f64, z as f64))
                 .with(sprite)
                 .with(Actor::new())
-                .with(Pather::with_request(grid_pos, GridPosition::new(0, 0, 10)))
+                .with(Pather::with_request(grid_pos, GridPosition::new(0, 0, 9)))
                 .build();
         }
     }

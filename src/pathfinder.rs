@@ -1,13 +1,23 @@
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashSet, VecDeque};
+
 use nalgebra::Vector3;
 use specs::prelude::*;
 
 use crate::grid::{grid_index, grid_index_u, Grid, GridPosition};
 
-use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashSet, VecDeque};
+pub const N_WORKERS: usize = 4;
+pub const STRAIGHT_COST: i32 = 10;
+pub const DIAGONAL_COST: i32 = 14;
+pub type Heuristic = fn(a: &GridPosition, b: &GridPosition) -> u32;
 
 fn manhatten(a: &GridPosition, b: &GridPosition) -> u32 {
     ((a.x() - b.x()).abs() + (a.y() - b.y()).abs() + (a.z() - b.z()).abs()) as u32
+}
+
+fn euler(a: &GridPosition, b: &GridPosition) -> u32 {
+    let x = ((a.x() - b.x()).pow(2) + (a.y() - b.y()).pow(2) + (a.z() - b.z()).pow(2)) as f64;
+    x.sqrt().floor() as u32
 }
 
 pub struct Pathfinder;
@@ -18,14 +28,13 @@ impl Pathfinder {
     }
 
     pub fn find_path(&self, grid: &Grid, start: &GridPosition, end: &GridPosition) -> Option<Path> {
-        println!("Calculating path");
         // Note the BinaryHeap is a max-heap
         let mut nodes = PathSpace::from_grid(&grid);
         let mut open: BinaryHeap<PathNodePos> = BinaryHeap::new();
         let mut close: HashSet<GridPosition> = HashSet::new();
 
         // Seed lists with initial position
-        let start_h = manhatten(start, end);
+        let start_h = euler(start, end);
         let start_node = PathNode {
             pos: start.clone(),
             g: 0,
@@ -46,6 +55,12 @@ impl Pathfinder {
                 node_g = node.g;
             }
 
+            // Check if we've reached our destination
+            if &node_pos == end {
+                // Trace the path back to start
+                return Some(Pathfinder::trace_path(&end, &mut nodes));
+            }
+
             let neighbours = grid.neighbours(&node_pos);
             let in_bound_neighbours = neighbours
                 .into_iter()
@@ -55,12 +70,6 @@ impl Pathfinder {
                 // Disregard nodes we have seen before
                 if close.contains(&neigh_pos) {
                     continue;
-                }
-
-                // Check if we've reached our destination
-                if &node_pos == end {
-                    // Trace the path back to start
-                    return Some(Pathfinder::trace_path(&end, &mut nodes));
                 }
 
                 let g = &node_g + 1;
@@ -220,6 +229,12 @@ impl PathResults {
 
 pub struct PathfindingSystem;
 
+impl PathfindingSystem {
+    pub fn new() -> Self {
+        PathfindingSystem
+    }
+}
+
 impl<'a> System<'a> for PathfindingSystem {
     type SystemData = (
         Read<'a, Pathfinder>,
@@ -231,12 +246,14 @@ impl<'a> System<'a> for PathfindingSystem {
         use rayon::prelude::*;
         use specs::ParJoin;
 
+        // TODO: Parallel join is not reaching rayon threshold, so runs synchronously regardless
         (&mut pathers)
             .par_join()
             .filter(|pather| pather.needs_path())
             .for_each(|pather| {
                 let maybe_request = pather.take_request();
                 if let PathRequest::Request(start, end) = maybe_request {
+                    println!("pathfinding thread: {:?}", ::std::thread::current().id());
                     match pathfinder.find_path(&grid, &start, &end) {
                         Some(path) => pather.request = PathRequest::Ready(path),
                         None => pather.request = PathRequest::Failed,
@@ -333,7 +350,7 @@ mod test {
 
     #[test]
     fn test_basic_pathfinding() {
-        let grid = Grid::with_size(128, 128, 128);
+        let grid = Grid::with_size(16, 16, 16);
         let pathfinder = Pathfinder::new();
 
         {
@@ -354,5 +371,15 @@ mod test {
 
     /// Ensure that when a path is impossible, we stop searching
     #[test]
-    fn test_pathing_fail() {}
+    fn test_pathing_fail() {
+        let grid = Grid::with_size(16, 16, 16);
+        let pathfinder = Pathfinder::new();
+
+        let path = pathfinder.find_path(
+            &grid,
+            &GridPosition::new(0, 0, 0),
+            &GridPosition::new(17, 17, 17),
+        );
+        assert!(path.is_none());
+    }
 }

@@ -4,8 +4,6 @@ use crate::common::DeltaTime;
 use crate::pathfinder::Pather;
 use crate::position::Position;
 
-const PROXIMITY: f64 = 0.1;
-
 #[derive(Component)]
 #[storage(DenseVecStorage)]
 pub struct Actor {
@@ -15,7 +13,7 @@ pub struct Actor {
 
 impl Actor {
     pub fn new() -> Self {
-        Actor { walk_speed: 1.0 }
+        Actor { walk_speed: 1.5 }
     }
 }
 
@@ -45,21 +43,25 @@ impl<'a> System<'a> for WalkerSystem {
             .filter(|(_actor, pather, _pos)| pather.has_path())
             .for_each(|(actor, pather, pos)| {
                 if let Some(node) = pather.current() {
-                    //println!("{:?}", node);
+                    let proximity = dt.0 * actor.walk_speed + 0.001;
+
+                    println!("Pos {:?}", pos);
                     let target = na::Vector3::<f64>::new(
                         node.pos.x() as f64,
                         node.pos.y() as f64,
                         node.pos.z() as f64,
                     );
-                    let diff = (target - pos.to_vector()).normalize();
-                    let walk_vector = diff * actor.walk_speed * dt.0;
-                    let new_pos = pos.to_vector() + walk_vector;
-                    pos.set_x(new_pos.x);
-                    pos.set_y(new_pos.y);
-                    pos.set_z(new_pos.z);
 
-                    if walk_vector.magnitude() <= PROXIMITY {
+                    let diff = target - pos.to_vector();
+                    if diff.magnitude() <= proximity {
+                        // also avoids normalised NaN when diff is [0, 0, 0]
                         pather.next();
+                    } else {
+                        let walk_vector = diff.normalize() * actor.walk_speed * dt.0;
+                        let new_pos = pos.to_vector() + walk_vector;
+                        pos.set_x(new_pos.x);
+                        pos.set_y(new_pos.y);
+                        pos.set_z(new_pos.z);
                     }
                 } else {
                     pather.reset();

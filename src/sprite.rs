@@ -139,20 +139,23 @@ impl<'a> System<'a> for SpriteRenderer {
         Read<'a, DepthBuffer>,
     );
 
-    fn run(&mut self, data: Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, on_render, cameras, sprites, positions, buffer): Self::SystemData,
+    ) {
         use graphics::*;
         use specs::Join;
 
         let SpriteRenderer { gl, .. } = self;
-        let (entities, on_render, cameras, sprites, position, buffer) = data;
 
-        let camera_pos = (&cameras, &position)
+        let camera_pos = (&cameras, &positions)
             .join()
             .find(|(camera, _position)| camera.is_current())
             .map(|(_camera, position)| Isometric::cart_to_iso(position.to_vector()))
             .unwrap_or(na::Vector3::new(0., 0., 0.));
         let camera_pos_2d = na::Vector2::<f64>::new(camera_pos.x, camera_pos.y + camera_pos.z);
 
+        const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
         const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
         const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 
@@ -174,15 +177,18 @@ impl<'a> System<'a> for SpriteRenderer {
             for item in buffer.contents() {
                 let e = entities.entity(item.entity_id());
                 if let Some(sprite) = sprites.get(e) {
-                    sprite.draw(transform, gl);
+                    if let Some(pos) = positions.get(e) {
+                        let iso_pos = Isometric::cart_to_iso(&na::Vector3::<f64>::new(
+                            (pos.x() + HALF_TILE_3D) * TILE_WIDTH_2D,
+                            (pos.y() + HALF_TILE_3D) * TILE_WIDTH_2D,
+                            pos.z() as f64 * TILE_DEPTH_2D,
+                        ));
+                        sprite.draw(transform.trans(iso_pos.x, iso_pos.y - iso_pos.z), gl);
+                    }
                 }
             }
 
             rectangle(RED, square, transform, gl);
-
-            // for sprite in sprites.join() {
-            //     sprite.draw(transform, gl);
-            // }
         });
     }
 }

@@ -2,15 +2,15 @@ use na::Vector3;
 use specs::prelude::*;
 
 // TODO: Make 3D
-const OFFSETS: [(i32, i32, i32); 4] = [
-    // (-1, -1, 0),
+const OFFSETS: [(i32, i32, i32); 8] = [
+    (-1, -1, 0),
     (0, -1, 0),
-    // (1, -1, 0),
+    (1, -1, 0),
     (-1, 0, 0),
     (1, 0, 0),
-    // (-1, 1, 0),
+    (-1, 1, 0),
     (0, 1, 0),
-    // (1, 1, 0),
+    (1, 1, 0),
 ];
 
 /// Return a one dimensional array or vector index given
@@ -51,11 +51,10 @@ impl Grid {
         (self.size.x, self.size.y, self.size.z)
     }
 
-    pub fn neighbours(&self, pos: &GridPosition) -> [Option<GridPosition>; 4] {
-        // let mut n = [None, None, None, None, None, None, None, None];
-        let mut n = [None, None, None, None];
+    pub fn neighbours(&self, pos: &GridPosition) -> [Option<GridPosition>; 8] {
+        let mut n = [None, None, None, None, None, None, None, None];
 
-        for i in 0..4 {
+        for i in 0..8 {
             let offset = OFFSETS[i];
             let v = Vector3::<i32>::new(pos.0.x + offset.0, pos.0.y + offset.1, pos.0.z + offset.2);
             let new_pos = GridPosition(v);

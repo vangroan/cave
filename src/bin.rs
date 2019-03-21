@@ -45,7 +45,7 @@ use position::Position;
 use settings::{TILE_DEPTH_2D, TILE_WIDTH_2D};
 use sort::{DepthBuffer, IsometricSorter};
 use sprite::{OnRender, Sprite, SpriteRenderer};
-use tilemap::{TileObj, Tilemap, Tile};
+use tilemap::{Tile, TileObj, Tilemap};
 
 fn main() {
     // Change this to OpenGL::V2_1 if not working.
@@ -144,7 +144,7 @@ fn main() {
                     .with(Position::new(x as f64, y as f64, z as f64))
                     .with(sprite)
                     .build();
-                }
+            }
         }
     }
 

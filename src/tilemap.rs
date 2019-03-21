@@ -25,7 +25,8 @@ impl Tilemap {
     }
 
     pub fn is_passable(&self, pos: &GridPosition) -> bool {
-        self.data.get(grid_index(&self.size, pos))
+        self.data
+            .get(grid_index(&self.size, pos))
             .map(|tile| tile != &Tile::GreyBlock)
             .unwrap_or(false)
     }

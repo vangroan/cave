@@ -29,9 +29,15 @@ impl Pathfinder {
         Pathfinder
     }
 
-    pub fn find_path<F>(&self, grid: &Grid, start: &GridPosition, end: &GridPosition, cost_func: F) -> Option<Path>
+    pub fn find_path<F>(
+        &self,
+        grid: &Grid,
+        start: &GridPosition,
+        end: &GridPosition,
+        cost_func: F,
+    ) -> Option<Path>
     where
-        F : Fn(&GridPosition, &GridPosition) -> Cost
+        F: Fn(&GridPosition, &GridPosition) -> Cost,
     {
         // Note the BinaryHeap is a max-heap
         let mut nodes = PathSpace::from_grid(&grid);
@@ -81,6 +87,8 @@ impl Pathfinder {
                 if cost == Cost::Blocked {
                     continue;
                 }
+
+                // TODO: Corner cutting detection
 
                 let g = &node_g + 1;
                 let h = manhatten(&node_pos, neigh_pos);
@@ -266,7 +274,13 @@ impl<'a> System<'a> for PathfindingSystem {
                 if let PathRequest::Request(start, end) = maybe_request {
                     println!("pathfinding thread: {:?}", ::std::thread::current().id());
 
-                    match pathfinder.find_path(&grid, &start, &end, |_, t| if tilemap.is_passable(t) { Cost::Passable } else { Cost::Blocked }) {
+                    match pathfinder.find_path(&grid, &start, &end, |_, t| {
+                        if tilemap.is_passable(t) {
+                            Cost::Passable
+                        } else {
+                            Cost::Blocked
+                        }
+                    }) {
                         Some(path) => pather.request = PathRequest::Ready(path),
                         None => pather.request = PathRequest::Failed,
                     }

@@ -7,4 +7,5 @@ extern crate specs_derive;
 
 pub mod grid;
 pub mod pathfinder;
+pub mod pathfinding;
 pub mod tilemap;

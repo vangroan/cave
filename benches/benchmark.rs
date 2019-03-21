@@ -4,7 +4,7 @@ extern crate criterion;
 use criterion::{criterion_group, criterion_main, Criterion};
 
 use cave::grid::{Grid, GridPosition};
-use cave::pathfinder::{Pathfinder, Cost};
+use cave::pathfinder::{Cost, Pathfinder};
 
 fn minus_one_benchmark(c: &mut Criterion) {
     c.bench_function("Bench Pathfinding 16x16x16 grid", |b| {

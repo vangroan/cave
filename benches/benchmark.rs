@@ -4,7 +4,7 @@ extern crate criterion;
 use criterion::{criterion_group, criterion_main, Criterion};
 
 use cave::grid::{Grid, GridPosition};
-use cave::pathfinder::Pathfinder;
+use cave::pathfinder::{Pathfinder, Cost};
 
 fn minus_one_benchmark(c: &mut Criterion) {
     c.bench_function("Bench Pathfinding 16x16x16 grid", |b| {
@@ -16,6 +16,7 @@ fn minus_one_benchmark(c: &mut Criterion) {
                     &grid,
                     &GridPosition::new(0, 0, 0),
                     &GridPosition::new(10, 10, 0),
+                    |_, _| Cost::Passable,
                 )
                 .expect("Failed to find path");
         })
@@ -30,6 +31,7 @@ fn minus_one_benchmark(c: &mut Criterion) {
                     &grid,
                     &GridPosition::new(0, 0, 0),
                     &GridPosition::new(10, 10, 0),
+                    |_, _| Cost::Passable,
                 )
                 .expect("Failed to find path");
         })

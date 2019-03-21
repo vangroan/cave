@@ -14,18 +14,34 @@ impl Tilemap {
         }
     }
 
+    #[inline(always)]
     pub fn set_tile(&mut self, pos: &GridPosition, tile: Tile) {
         self.data[grid_index(&self.size, pos)] = tile;
     }
 
+    #[inline(always)]
     pub fn tile(&self, pos: &GridPosition) -> Option<&Tile> {
         self.data.get(grid_index(&self.size, pos))
     }
+
+    pub fn is_passable(&self, pos: &GridPosition) -> bool {
+        self.data.get(grid_index(&self.size, pos))
+            .map(|tile| tile != &Tile::GreyBlock)
+            .unwrap_or(false)
+    }
 }
 
+impl Default for Tilemap {
+    fn default() -> Tilemap {
+        Tilemap::with_size(16, 16, 16)
+    }
+}
+
+#[derive(Eq, PartialEq)]
 pub enum Tile {
     Empty,
     GreyBlock,
+    Ladder,
 }
 
 /// Marks an entity as locked to the tilemap grid

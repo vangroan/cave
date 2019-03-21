@@ -45,7 +45,6 @@ impl<'a> System<'a> for WalkerSystem {
                 if let Some(node) = pather.current() {
                     let proximity = dt.0 * actor.walk_speed + 0.001;
 
-                    println!("Pos {:?}", pos);
                     let target = na::Vector3::<f64>::new(
                         node.pos.x() as f64,
                         node.pos.y() as f64,

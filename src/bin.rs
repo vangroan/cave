@@ -6,7 +6,6 @@ extern crate num_traits as nt;
 extern crate opengl_graphics;
 extern crate piston;
 extern crate rayon;
-extern crate shred;
 extern crate specs;
 #[macro_use]
 extern crate specs_derive;
@@ -46,7 +45,7 @@ use position::Position;
 use settings::{TILE_DEPTH_2D, TILE_WIDTH_2D};
 use sort::{DepthBuffer, IsometricSorter};
 use sprite::{OnRender, Sprite, SpriteRenderer};
-use tilemap::{TileObj, Tilemap};
+use tilemap::{TileObj, Tilemap, Tile};
 
 fn main() {
     // Change this to OpenGL::V2_1 if not working.
@@ -76,6 +75,7 @@ fn main() {
     world.register::<Sprite<Texture>>();
     world.register::<Pather>();
     world.register::<Position>();
+    world.register::<GridPosition>();
 
     let mut update_dispatcher = DispatcherBuilder::new()
         .with(PathfindingSystem::new(), "pathfinder", &[])
@@ -126,6 +126,11 @@ fn main() {
                     y as f64 * TILE_WIDTH_2D,
                     z as f64 * TILE_DEPTH_2D,
                 ));
+                let grid_pos = GridPosition::new(x, y, z);
+                world
+                    .write_resource::<Tilemap>()
+                    .set_tile(&grid_pos, Tile::GreyBlock);
+
                 let mut sprite = Sprite::from_texture(block_tex.clone());
                 // sprite.set_position(pos.x, pos.y - pos.z);
                 sprite.set_anchor(0.5, 70. / 90.);
@@ -139,7 +144,7 @@ fn main() {
                     .with(Position::new(x as f64, y as f64, z as f64))
                     .with(sprite)
                     .build();
-            }
+                }
         }
     }
 

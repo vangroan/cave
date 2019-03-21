@@ -5,6 +5,7 @@ use nalgebra::Vector3;
 use specs::prelude::*;
 
 use crate::grid::{grid_index, grid_index_u, Grid, GridPosition};
+use crate::tilemap::Tilemap;
 
 pub const N_WORKERS: usize = 4;
 pub const STRAIGHT_COST: i32 = 10;
@@ -20,6 +21,7 @@ fn euler(a: &GridPosition, b: &GridPosition) -> u32 {
     x.sqrt().floor() as u32
 }
 
+#[derive(Default)]
 pub struct Pathfinder;
 
 impl Pathfinder {
@@ -27,7 +29,10 @@ impl Pathfinder {
         Pathfinder
     }
 
-    pub fn find_path(&self, grid: &Grid, start: &GridPosition, end: &GridPosition) -> Option<Path> {
+    pub fn find_path<F>(&self, grid: &Grid, start: &GridPosition, end: &GridPosition, cost_func: F) -> Option<Path>
+    where
+        F : Fn(&GridPosition, &GridPosition) -> Cost
+    {
         // Note the BinaryHeap is a max-heap
         let mut nodes = PathSpace::from_grid(&grid);
         let mut open: BinaryHeap<PathNodePos> = BinaryHeap::new();
@@ -46,7 +51,7 @@ impl Pathfinder {
         close.insert(start.clone());
 
         while let Some(PathNodePos(node_pos, _)) = open.pop() {
-            // We keep track of how fra we've traveled from the start
+            // We keep track of how far we've traveled from the start
             let node_g: u32;
             {
                 let (node, _parent) = nodes
@@ -69,6 +74,11 @@ impl Pathfinder {
             for neigh_pos in in_bound_neighbours {
                 // Disregard nodes we have seen before
                 if close.contains(&neigh_pos) {
+                    continue;
+                }
+
+                let cost = cost_func(&node_pos, &neigh_pos);
+                if cost == Cost::Blocked {
                     continue;
                 }
 
@@ -111,10 +121,10 @@ impl Pathfinder {
     }
 }
 
-impl Default for Pathfinder {
-    fn default() -> Pathfinder {
-        Pathfinder
-    }
+#[derive(Eq, PartialEq)]
+pub enum Cost {
+    Passable,
+    Blocked,
 }
 
 pub struct Path(Vec<PathNode>);
@@ -239,10 +249,11 @@ impl<'a> System<'a> for PathfindingSystem {
     type SystemData = (
         Read<'a, Pathfinder>,
         Read<'a, Grid>,
+        Read<'a, Tilemap>,
         WriteStorage<'a, Pather>,
     );
 
-    fn run(&mut self, (pathfinder, grid, mut pathers): Self::SystemData) {
+    fn run(&mut self, (pathfinder, grid, tilemap, mut pathers): Self::SystemData) {
         use rayon::prelude::*;
         use specs::ParJoin;
 
@@ -254,7 +265,8 @@ impl<'a> System<'a> for PathfindingSystem {
                 let maybe_request = pather.take_request();
                 if let PathRequest::Request(start, end) = maybe_request {
                     println!("pathfinding thread: {:?}", ::std::thread::current().id());
-                    match pathfinder.find_path(&grid, &start, &end) {
+
+                    match pathfinder.find_path(&grid, &start, &end, |_, t| if tilemap.is_passable(t) { Cost::Passable } else { Cost::Blocked }) {
                         Some(path) => pather.request = PathRequest::Ready(path),
                         None => pather.request = PathRequest::Failed,
                     }
@@ -359,6 +371,7 @@ mod test {
                     &grid,
                     &GridPosition::new(0, 0, 0),
                     &GridPosition::new(10, 10, 0),
+                    |_src, _target| Cost::Passable,
                 )
                 .expect("Failed to find path");
             assert_eq!(GridPosition::new(0, 0, 0), path.0[0].pos);
@@ -379,6 +392,7 @@ mod test {
             &grid,
             &GridPosition::new(0, 0, 0),
             &GridPosition::new(17, 17, 17),
+            |_src, _target| Cost::Passable,
         );
         assert!(path.is_none());
     }

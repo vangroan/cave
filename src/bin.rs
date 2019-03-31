@@ -175,7 +175,7 @@ fn main() {
                 .with(Position::new(x as f64, y as f64, z as f64))
                 .with(sprite)
                 .with(Actor::new())
-                .with(Pather::with_request(grid_pos, GridPosition::new(0, 0, 9)))
+                .with(Pather::with_request(grid_pos, GridPosition::new(9, 9, 9)))
                 .build();
         }
     }

@@ -1,15 +1,24 @@
 use crate::grid::{Grid, GridPosition};
 
-use super::cost::Cost;
+use super::cost::*;
+use super::locomotion::*;
 use super::path_result::PathResult;
 use super::pathfinder::Pathfinder;
 
 pub struct JumpPointSearch;
 
 impl Pathfinder for JumpPointSearch {
-    fn find_path<F>(&self, grid: &Grid, start: &GridPosition, end: &GridPosition, cost_func: F) -> PathResult
+    fn find_path<C, L>(
+        &self,
+        grid: &Grid,
+        start: &GridPosition,
+        end: &GridPosition,
+        cost: &C,
+        locomotion: &L,
+    ) -> PathResult
     where
-        F: Fn(&GridPosition, &GridPosition) -> Cost,
+        C: CostStrategy,
+        L: LocomotionStrategy,
     {
         unimplemented!()
     }

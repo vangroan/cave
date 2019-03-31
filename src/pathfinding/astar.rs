@@ -1,6 +1,7 @@
 //! A* Pathfinding
 
-use super::cost::Cost;
+use super::cost::*;
+use super::locomotion::*;
 use super::distance::*;
 use super::path_node::*;
 use super::path_result::PathResult;
@@ -21,15 +22,17 @@ impl AStar {
 }
 
 impl Pathfinder for AStar {
-    fn find_path<F>(
+    fn find_path<C, L>(
         &self,
         grid: &Grid,
         start: &GridPosition,
         end: &GridPosition,
-        cost_func: F,
+        cost_strat: &C,
+        locomotion: &L,
     ) -> PathResult
     where
-        F: Fn(&GridPosition, &GridPosition) -> Cost,
+        C: CostStrategy,
+        L: LocomotionStrategy,
     {
         let mut iter_count = 0;
         let start_time = time::Instant::now();
@@ -85,7 +88,7 @@ impl Pathfinder for AStar {
                 }
 
                 // TODO: Rethink how to pass in Cost func so we don't have all these ownership issues with tilemap
-                let cost = cost_func(&node_pos, &neigh_pos);
+                let cost = cost_strat.is_passable(&node_pos, &neigh_pos);
                 if cost == Cost::Blocked {
                     continue;
                 }

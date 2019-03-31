@@ -1,4 +1,6 @@
 
+use crate::grid::GridPosition;
+
 /// Needs solid ground underneath
 pub const GROUND_WALK : u32 = 1 << 0;
 
@@ -23,6 +25,15 @@ impl Locomotion {
     pub fn has_method(&self, method: u32) -> bool {
         self.methods & method == method
     }
+}
+
+/// A strategy passed into the pathfinding function to apply pathing rules
+/// based on the entity's locomotion type.
+pub trait LocomotionStrategy {
+    /// Indicates whether the pather can travel from the source location to
+    /// the target location, based on the surrounding blocks and the locomotion
+    /// type.
+    fn is_passable(&self, source: &GridPosition, target: &GridPosition) -> bool;
 }
 
 #[cfg(test)]

@@ -1,10 +1,19 @@
 use crate::grid::{Grid, GridPosition};
 
-use super::cost::Cost;
+use super::cost::*;
+use super::locomotion::*;
 use super::path_result::PathResult;
 
 pub trait Pathfinder {
-    fn find_path<F>(&self, grid: &Grid, start: &GridPosition, end: &GridPosition, cost_func: F) -> PathResult
-    where
-        F: Fn(&GridPosition, &GridPosition) -> Cost;
+        fn find_path<C, L>(
+                &self,
+                grid: &Grid,
+                start: &GridPosition,
+                end: &GridPosition,
+                cost: &C,
+                locomotion: &L,
+        ) -> PathResult
+        where
+                C: CostStrategy,
+                L: LocomotionStrategy;
 }

@@ -48,8 +48,14 @@ impl Pather {
         request
     }
 
+    #[inline(always)]
     pub fn request(&self) -> &PathRequest {
         &self.request
+    }
+
+    #[inline(always)]
+    pub fn set_request(&mut self, req: PathRequest) {
+        self.request = req;
     }
 
     pub fn next(&mut self) -> Option<&PathNode> {

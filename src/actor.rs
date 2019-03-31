@@ -1,7 +1,7 @@
 use specs::prelude::*;
 
 use crate::common::DeltaTime;
-use crate::pathfinder::Pather;
+use crate::pathfinding::components::Pather;
 use crate::position::Position;
 
 #[derive(Component)]

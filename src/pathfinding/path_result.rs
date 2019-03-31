@@ -35,4 +35,15 @@ impl PathResult {
     pub fn path(&self) -> Option<&Vec<PathNode>> {
         self.path.as_ref()
     }
+
+    pub fn take_path(&mut self) -> Option<Vec<PathNode>> {
+        self.path.take()
+    }
+
+    pub fn is_success(&self) -> bool {
+        match self.path {
+            Some(_) => true,
+            None => false,
+        }
+    }
 }

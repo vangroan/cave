@@ -91,7 +91,7 @@ impl Pathfinder for AStar {
                 }
 
                 // TODO: Corner cutting detection
-
+                // TODO: Cost retrieved from cost_func added to `g`
                 let g = &node_g + 1;
                 let h = manhatten(&node_pos, neigh_pos);
 

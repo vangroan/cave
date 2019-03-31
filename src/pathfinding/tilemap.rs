@@ -44,11 +44,16 @@ impl<'a> TilemapLocomotion<'a> {
 
 impl<'a> LocomotionStrategy for TilemapLocomotion<'a> {
     #[inline(always)]
-    fn is_passable(&self, locomotion: &Locomotion, _source: &GridPosition, target: &GridPosition) -> bool {
+    fn is_passable(
+        &self,
+        locomotion: &Locomotion,
+        _source: &GridPosition,
+        target: &GridPosition,
+    ) -> bool {
         if locomotion.has_method(GROUND_WALK) {
             // "I need solid ground to stand on"
             let beneath = GridPosition::new(target.x(), target.y(), target.z() - 1);
-            
+
             if !self.grid.in_bounds(&beneath) {
                 // Bottom, or edge, of world
                 return false;

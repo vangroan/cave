@@ -1,4 +1,3 @@
-
 use crate::grid::GridPosition;
 
 #[derive(Eq, PartialEq)]
@@ -10,7 +9,7 @@ pub enum Cost {
 impl Cost {
     pub fn passable(self) -> Option<u32> {
         use Cost::*;
-        
+
         match self {
             Passable(cost) => Some(cost),
             Blocked => None,

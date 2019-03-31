@@ -152,6 +152,13 @@ fn main() {
     // Build actors
     for x in 0..10 {
         for y in 0..10 {
+            if (x + y) % 2 != 0 {
+                continue;
+            }
+            if x >= 5 && y >= 5 {
+                continue;
+            }
+
             const HALF_TILE_3D: f64 = 0.5;
             let z = 9;
             let grid_pos = GridPosition::new(x, y, z);
@@ -160,12 +167,6 @@ fn main() {
                 (y as f64 + HALF_TILE_3D) * TILE_WIDTH_2D,
                 z as f64 * TILE_DEPTH_2D,
             ));
-            if (x + y) % 5 != 0 {
-                continue;
-            }
-            if x >= 5 && y >= 5 && z >= 5 {
-                continue;
-            }
 
             let mut sprite = Sprite::from_texture(man_tex.clone());
             // sprite.set_position(pos.x, pos.y - pos.z);

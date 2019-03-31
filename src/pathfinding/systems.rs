@@ -1,9 +1,9 @@
 use super::astar::AStar;
 use super::components::*;
 use super::cost::Cost;
+use super::locomotion::*;
 use super::pathfinder::*;
 use super::tilemap::*;
-use super::locomotion::*;
 use crate::grid::Grid;
 use crate::grid::GridPosition;
 use crate::pathfinding::path_result::PathResult;
@@ -44,9 +44,15 @@ impl<'a> System<'a> for PathfindingSystem {
                 if let PathRequest::Request(start, end) = maybe_request {
                     println!("pathfinding thread: {:?}", ::std::thread::current().id());
 
-                    let path_result =
-                        pathfinder.find_path(&grid, locomotion, &start, &end, &cost_strat, &loco_strat);
-                        
+                    let path_result = pathfinder.find_path(
+                        &grid,
+                        locomotion,
+                        &start,
+                        &end,
+                        &cost_strat,
+                        &loco_strat,
+                    );
+
                     if path_result.is_success() {
                         pather.set_request(PathRequest::Ready(path_result));
                     } else {

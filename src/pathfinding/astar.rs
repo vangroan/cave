@@ -1,8 +1,8 @@
 //! A* Pathfinding
 
 use super::cost::*;
-use super::locomotion::*;
 use super::distance::*;
+use super::locomotion::*;
 use super::path_node::*;
 use super::path_result::PathResult;
 use super::path_space::PathSpace;
@@ -94,7 +94,7 @@ impl Pathfinder for AStar {
                     continue;
                 }
 
-                if !loco_strat.is_passable(locomotion, start, end) {
+                if !loco_strat.is_passable(locomotion, &node_pos, &neigh_pos) {
                     continue;
                 }
 

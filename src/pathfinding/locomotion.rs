@@ -1,4 +1,3 @@
-
 // TODO: Move to Component module
 
 use specs::prelude::*;
@@ -6,16 +5,16 @@ use specs::prelude::*;
 use crate::grid::GridPosition;
 
 /// Needs solid ground underneath
-pub const GROUND_WALK : u32 = 1 << 0;
+pub const GROUND_WALK: u32 = 1 << 0;
 
 /// Traverse up and down level "portals", like stairs and ramps
-pub const CLIMB_STAIRS : u32 = 1 << 1;
+pub const CLIMB_STAIRS: u32 = 1 << 1;
 
 /// Traverse up and down climbable structures, like ladders and vines
-pub const CLIMB_LADDERS : u32 = 1 << 2;
+pub const CLIMB_LADDERS: u32 = 1 << 2;
 
 /// Disregard any terrain rules
-pub const GO_ANYWHERE : u32 = 1 << 31;
+pub const GO_ANYWHERE: u32 = 1 << 31;
 
 /// Indicates how the entity can move
 #[derive(Component)]
@@ -46,7 +45,12 @@ pub trait LocomotionStrategy {
     /// Indicates whether the pather can travel from the source location to
     /// the target location, based on the surrounding blocks and the locomotion
     /// type.
-    fn is_passable(&self, locomotion: &Locomotion, source: &GridPosition, target: &GridPosition) -> bool;
+    fn is_passable(
+        &self,
+        locomotion: &Locomotion,
+        source: &GridPosition,
+        target: &GridPosition,
+    ) -> bool;
 }
 
 #[cfg(test)]

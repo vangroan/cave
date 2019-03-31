@@ -21,7 +21,7 @@ pub struct NoOpLocomotion;
 
 impl LocomotionStrategy for NoOpLocomotion {
     #[inline]
-    fn is_passable(&self, _source: &GridPosition, _target: &GridPosition) -> bool {
+    fn is_passable(&self, _locomotion: &Locomotion, _source: &GridPosition, _target: &GridPosition) -> bool {
         true
     }
 }

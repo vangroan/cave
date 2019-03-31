@@ -25,6 +25,7 @@ impl Tilemap {
     }
 
     pub fn is_passable(&self, pos: &GridPosition) -> bool {
+        // TODO: Should we bounds check?
         self.data
             .get(grid_index(&self.size, pos))
             .map(|tile| tile != &Tile::GreyBlock)

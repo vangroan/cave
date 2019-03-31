@@ -40,7 +40,7 @@ use camera::IsometricCamera;
 use common::DeltaTime;
 use grid::{Grid, GridPosition};
 use isometric::Isometric;
-use pathfinding::{components::Pather, AStar, systems::PathfindingSystem};
+use pathfinding::{components::Pather, systems::PathfindingSystem, AStar, Locomotion, GROUND_WALK};
 use position::Position;
 use settings::{TILE_DEPTH_2D, TILE_WIDTH_2D};
 use sort::{DepthBuffer, IsometricSorter};
@@ -71,6 +71,7 @@ fn main() {
     world.add_resource(DepthBuffer::new());
     world.register::<Actor>();
     world.register::<IsometricCamera>();
+    world.register::<Locomotion>();
     world.register::<TileObj>();
     world.register::<Sprite<Texture>>();
     world.register::<Pather>();
@@ -168,14 +169,15 @@ fn main() {
 
             let mut sprite = Sprite::from_texture(man_tex.clone());
             // sprite.set_position(pos.x, pos.y - pos.z);
-            sprite.set_anchor(0.5, 1.1);
+            sprite.set_anchor(0.5, 0.9);
 
             world
                 .create_entity()
                 .with(Position::new(x as f64, y as f64, z as f64))
                 .with(sprite)
                 .with(Actor::new())
-                .with(Pather::with_request(grid_pos, GridPosition::new(9, 9, 9)))
+                .with(Pather::with_request(grid_pos, GridPosition::new(4, 9, 9)))
+                .with(Locomotion::new(&[GROUND_WALK]))
                 .build();
         }
     }

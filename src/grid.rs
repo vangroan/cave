@@ -111,6 +111,13 @@ impl GridPosition {
     pub fn vector(&self) -> &na::Vector3<i32> {
         &self.0
     }
+
+    /// Tests for diagonality on the x, y plane
+    pub fn is_diagonal_2d(&self, rhs: &GridPosition) -> bool {
+        let x = rhs.0.x - self.0.x;
+        let y = rhs.0.y - self.0.y;
+        x != 0 && y != 0
+    }
 }
 
 #[cfg(test)]
@@ -122,5 +129,26 @@ mod test {
         let size = Vector3::<u32>::new(10, 10, 10);
         assert_eq!(432, grid_index(&size, &GridPosition::new(2, 3, 4)));
         assert_eq!(999, grid_index(&size, &GridPosition::new(9, 9, 9)));
+    }
+
+    #[test]
+    fn test_diagonal_2d() {
+        {
+            let a = GridPosition::new(0, 1, 0);
+            let b = GridPosition::new(1, 2, 0);
+            assert!(a.is_diagonal_2d(&b));
+        }
+
+        {
+            let a = GridPosition::new(1, 2, 0);
+            let b = GridPosition::new(1, 1, 0);
+            assert!(!a.is_diagonal_2d(&b));
+        }
+
+        {
+            let a = GridPosition::new(-1, -2, 0);
+            let b = GridPosition::new(-1, -1, 0);
+            assert!(!a.is_diagonal_2d(&b));
+        }
     }
 }

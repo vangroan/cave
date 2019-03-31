@@ -8,10 +8,11 @@ pub trait Pathfinder {
         fn find_path<C, L>(
                 &self,
                 grid: &Grid,
+                locomotion: &Locomotion,
                 start: &GridPosition,
                 end: &GridPosition,
-                cost: &C,
-                locomotion: &L,
+                cost_strat: &C,
+                loco_strat: &L,
         ) -> PathResult
         where
                 C: CostStrategy,

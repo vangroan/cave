@@ -25,10 +25,11 @@ impl Pathfinder for AStar {
     fn find_path<C, L>(
         &self,
         grid: &Grid,
+        locomotion: &Locomotion,
         start: &GridPosition,
         end: &GridPosition,
         cost_strat: &C,
-        locomotion: &L,
+        loco_strat: &L,
     ) -> PathResult
     where
         C: CostStrategy,
@@ -93,10 +94,14 @@ impl Pathfinder for AStar {
                     continue;
                 }
 
+                if !loco_strat.is_passable(locomotion, start, end) {
+                    continue;
+                }
+
                 // TODO: Corner cutting detection
                 // TODO: Cost retrieved from cost_func added to `g`
-                let g = &node_g + 1;
-                let h = manhatten(&node_pos, neigh_pos);
+                let g = &node_g + cost.passable().unwrap();
+                let h = euler(&node_pos, neigh_pos) * 10;
 
                 // TODO: Check if node is pathable
                 let parent_node = Some(node_pos.clone());

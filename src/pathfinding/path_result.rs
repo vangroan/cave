@@ -16,6 +16,22 @@ pub struct PathResult {
 }
 
 impl PathResult {
+    pub fn with_stats(iter_count: u32, duration: Duration, path: Vec<PathNode>) -> Self {
+        PathResult {
+            iter_count,
+            duration,
+            path: Some(path),
+        }
+    }
+
+    pub fn with_fail_stats(iter_count: u32, duration: Duration) -> Self {
+        PathResult {
+            iter_count,
+            duration,
+            path: None,
+        }
+    }
+
     pub fn path(&self) -> Option<&Vec<PathNode>> {
         self.path.as_ref()
     }

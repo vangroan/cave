@@ -1,15 +1,21 @@
+mod astar;
 mod components;
 mod cost;
 mod distance;
+mod jump_point_search;
 mod path_node;
 mod path_result;
+mod path_space;
 mod pathfinder;
 mod systems;
 
+pub use astar::*;
 pub use components::*;
 pub use cost::*;
 pub use distance::*;
+pub use jump_point_search::*;
 pub use path_node::*;
 pub use path_result::*;
+pub use path_space::*;
 pub use pathfinder::*;
 pub use systems::*;

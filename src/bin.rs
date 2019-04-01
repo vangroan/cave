@@ -122,11 +122,6 @@ fn main() {
                 if z == 9 && (x % 2 == 0 || y % 2 == 0) {
                     continue;
                 }
-                let pos = Isometric::cart_to_iso(&na::Vector3::<f64>::new(
-                    x as f64 * TILE_WIDTH_2D,
-                    y as f64 * TILE_WIDTH_2D,
-                    z as f64 * TILE_DEPTH_2D,
-                ));
                 let grid_pos = GridPosition::new(x, y, z);
                 world
                     .write_resource::<Tilemap>()
@@ -159,14 +154,8 @@ fn main() {
                 continue;
             }
 
-            const HALF_TILE_3D: f64 = 0.5;
             let z = 9;
             let grid_pos = GridPosition::new(x, y, z);
-            let pos = Isometric::cart_to_iso(&na::Vector3::<f64>::new(
-                (x as f64 + HALF_TILE_3D) * TILE_WIDTH_2D,
-                (y as f64 + HALF_TILE_3D) * TILE_WIDTH_2D,
-                z as f64 * TILE_DEPTH_2D,
-            ));
 
             let mut sprite = Sprite::from_texture(man_tex.clone());
             // sprite.set_position(pos.x, pos.y - pos.z);

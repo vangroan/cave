@@ -61,7 +61,11 @@ fn create_block(world: &mut World, block_tex: Arc<Texture>, grid_pos: &GridPosit
 
     world
         .create_entity()
-        .with(Position::new(grid_pos.x() as f64, grid_pos.y() as f64, grid_pos.z() as f64))
+        .with(Position::new(
+            grid_pos.x() as f64,
+            grid_pos.y() as f64,
+            grid_pos.z() as f64,
+        ))
         .with(sprite)
         .build()
 }
@@ -78,9 +82,9 @@ fn main() {
         .unwrap();
 
     // Map Size
-    const MAP_WIDTH: u32 = 32;
-    const MAP_HEIGHT: u32 = 32;
-    const MAP_DEPTH: u32 = 32;
+    const MAP_WIDTH: u32 = 10;
+    const MAP_HEIGHT: u32 = 10;
+    const MAP_DEPTH: u32 = 10;
 
     // Setup ECS
     let mut world = World::new();
@@ -126,35 +130,33 @@ fn main() {
         .build();
 
     // Build blocks
-    // for x in 0..MAP_WIDTH as i32 {
-    //     for y in 0..MAP_HEIGHT as i32 {
-    // for x in 0..MAP_WIDTH as i32 {
-    //     for y in 0..MAP_HEIGHT as i32 {
-    //         for z in 0..MAP_DEPTH as i32 {
+    for x in 0..MAP_WIDTH as i32 {
+        for y in 0..MAP_HEIGHT as i32 {
+            for z in 0..MAP_DEPTH as i32 {
                 // if x + y + z > 7 {
                 //     continue;
                 // }
                 // if (x + y + z) % 2 == 0 {
                 //     continue;
                 // }
-                // if x >= 5 && y >= 5 && z >= 5 {
+                if x >= 5 && y >= 5 && z >= 5 {
+                    continue;
+                }
+                if z == 9 && (x % 2 == 0 || y % 2 == 0) {
+                    continue;
+                }
+                // if x != y || y != z || x != z {
                 //     continue;
                 // }
-                // if z == 9 && (x % 2 == 0 || y % 2 == 0) {
-                //     continue;
-                // }
-    //             if x != y || y != z || x != z {
-    //                 continue;
-    //             }
-    //             let grid_pos = GridPosition::new(x, y, z);
-    //             create_block(&mut world, block_tex.clone(), &grid_pos);
-    //         }
-    //     }
-    // }
+                let grid_pos = GridPosition::new(x, y, z);
+                create_block(&mut world, block_tex.clone(), &grid_pos);
+            }
+        }
+    }
 
-    create_block(&mut world, block_tex.clone(), &GridPosition::new(0, 0, 0));
-    create_block(&mut world, block_tex.clone(), &GridPosition::new(1, 1, 1));
-    create_block(&mut world, block_tex.clone(), &GridPosition::new(2, 2, 2));
+    // create_block(&mut world, block_tex.clone(), &GridPosition::new(0, 0, 0));
+    // create_block(&mut world, block_tex.clone(), &GridPosition::new(1, 1, 1));
+    // create_block(&mut world, block_tex.clone(), &GridPosition::new(2, 2, 2));
     // create_block(&mut world, block_tex.clone(), &GridPosition::new(2, 2, 1));
 
     // Build actors

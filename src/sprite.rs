@@ -182,7 +182,7 @@ impl<'a> System<'a> for SpriteRenderer {
                         let iso_pos = Isometric::cart_to_iso(&na::Vector3::<f64>::new(
                             (pos.x() + HALF_TILE_3D) * TILE_WIDTH_2D,
                             (pos.y() + HALF_TILE_3D) * TILE_WIDTH_2D,
-                            pos.z() as f64 * TILE_DEPTH_2D,
+                            pos.z() * TILE_DEPTH_2D,
                         ));
                         sprite.draw(transform.trans(iso_pos.x, iso_pos.y - iso_pos.z), gl);
                     }

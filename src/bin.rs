@@ -57,9 +57,9 @@ fn main() {
         .unwrap();
 
     // Map Size
-    const MAP_WIDTH: u32 = 16;
-    const MAP_HEIGHT: u32 = 16;
-    const MAP_DEPTH: u32 = 16;
+    const MAP_WIDTH: u32 = 32;
+    const MAP_HEIGHT: u32 = 32;
+    const MAP_DEPTH: u32 = 32;
 
     // Setup ECS
     let mut world = World::new();
@@ -105,8 +105,8 @@ fn main() {
         .build();
 
     // Build blocks
-    for x in 0..10 {
-        for y in 0..10 {
+    for x in 0..MAP_WIDTH as i32 {
+        for y in 0..MAP_HEIGHT as i32 {
             for z in 0..10 {
                 // if x + y + z > 7 {
                 //     continue;

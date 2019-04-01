@@ -52,6 +52,18 @@ fn depth_sort_benchmark(c: &mut Criterion) {
             pigeon.sort_into(&mut source, &mut target, |pair| pair.0);
         });
     });
+
+    c.bench_function("Bench Pigeonhole Sort 64x64x64 grid", |b| {
+        b.iter(|| {
+            let max = 64 * 64 * 64;
+            // (depth, identifier)
+            let mut pigeon = PigeonholeSort::<(i32, i32)>::new(0, max);
+            let mut source: Vec<(i32, i32)> = (0..max * 4).map(|i| (i / 4, i)).collect();
+            let mut target: Vec<(i32, i32)> = vec![Default::default(); source.len()];
+
+            pigeon.sort_into(&mut source, &mut target, |pair| pair.0);
+        });
+    });
 }
 
 criterion_group!(benches, pathfinding_benchmark, depth_sort_benchmark);

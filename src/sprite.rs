@@ -7,7 +7,7 @@ use opengl_graphics::{GlGraphics, Texture};
 use piston::input::*;
 use specs::prelude::*;
 
-use crate::camera::IsometricCamera;
+use crate::view::components::IsometricCamera;
 use crate::isometric::Isometric;
 use crate::position::Position;
 use crate::settings::*;

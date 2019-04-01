@@ -22,7 +22,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 mod actor;
-mod camera;
 mod common;
 mod grid;
 mod isometric;
@@ -34,18 +33,17 @@ mod settings;
 mod sort;
 mod sprite;
 mod tilemap;
+mod view;
 
 use actor::{Actor, WalkerSystem};
-use camera::IsometricCamera;
 use common::DeltaTime;
 use grid::{Grid, GridPosition};
-use isometric::Isometric;
 use pathfinding::{components::Pather, systems::PathfindingSystem, AStar, Locomotion, GROUND_WALK};
 use position::Position;
-use settings::{TILE_DEPTH_2D, TILE_WIDTH_2D};
 use sort::{DepthBuffer, IsometricSorter};
 use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{Tile, TileObj, Tilemap};
+use view::components::IsometricCamera;
 
 fn main() {
     // Change this to OpenGL::V2_1 if not working.
@@ -145,8 +143,8 @@ fn main() {
     }
 
     // Build actors
-    for x in 0..10 {
-        for y in 0..10 {
+    for x in 0..1 {
+        for y in 0..1 {
             if (x + y) % 2 != 0 {
                 continue;
             }

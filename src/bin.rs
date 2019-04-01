@@ -170,7 +170,9 @@ fn main() {
         }
     }
 
-    let mut events = Events::new(EventSettings::new());
+    let settings = EventSettings::new().max_fps(60).ups(60);
+
+    let mut events = Events::new(settings);
     while let Some(e) = events.next(&mut window) {
         if let Some(Button::Keyboard(key)) = e.release_args() {
             use specs::Join;

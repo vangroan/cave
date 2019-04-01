@@ -17,6 +17,7 @@ use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
 use specs::prelude::*;
+use specs::Entity;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -44,6 +45,26 @@ use sort::{DepthBuffer, IsometricSorter};
 use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{Tile, TileObj, Tilemap};
 use view::components::IsometricCamera;
+
+fn create_block(world: &mut World, block_tex: Arc<Texture>, grid_pos: &GridPosition) -> Entity {
+    world
+        .write_resource::<Tilemap>()
+        .set_tile(&grid_pos, Tile::GreyBlock);
+
+    let mut sprite = Sprite::from_texture(block_tex);
+    // sprite.set_position(pos.x, pos.y - pos.z);
+    sprite.set_anchor(0.5, 70. / 90.);
+
+    // Lower blocks are darker
+    let c = 0.8 + (grid_pos.z() as f32 / 50.);
+    sprite.set_color([c, c, c, 1.0]);
+
+    world
+        .create_entity()
+        .with(Position::new(grid_pos.x() as f64, grid_pos.y() as f64, grid_pos.z() as f64))
+        .with(sprite)
+        .build()
+}
 
 fn main() {
     // Change this to OpenGL::V2_1 if not working.
@@ -105,42 +126,36 @@ fn main() {
         .build();
 
     // Build blocks
-    for x in 0..MAP_WIDTH as i32 {
-        for y in 0..MAP_HEIGHT as i32 {
-            for z in 0..10 {
+    // for x in 0..MAP_WIDTH as i32 {
+    //     for y in 0..MAP_HEIGHT as i32 {
+    // for x in 0..MAP_WIDTH as i32 {
+    //     for y in 0..MAP_HEIGHT as i32 {
+    //         for z in 0..MAP_DEPTH as i32 {
                 // if x + y + z > 7 {
                 //     continue;
                 // }
                 // if (x + y + z) % 2 == 0 {
                 //     continue;
                 // }
-                if x >= 5 && y >= 5 && z >= 5 {
-                    continue;
-                }
-                if z == 9 && (x % 2 == 0 || y % 2 == 0) {
-                    continue;
-                }
-                let grid_pos = GridPosition::new(x, y, z);
-                world
-                    .write_resource::<Tilemap>()
-                    .set_tile(&grid_pos, Tile::GreyBlock);
+                // if x >= 5 && y >= 5 && z >= 5 {
+                //     continue;
+                // }
+                // if z == 9 && (x % 2 == 0 || y % 2 == 0) {
+                //     continue;
+                // }
+    //             if x != y || y != z || x != z {
+    //                 continue;
+    //             }
+    //             let grid_pos = GridPosition::new(x, y, z);
+    //             create_block(&mut world, block_tex.clone(), &grid_pos);
+    //         }
+    //     }
+    // }
 
-                let mut sprite = Sprite::from_texture(block_tex.clone());
-                // sprite.set_position(pos.x, pos.y - pos.z);
-                sprite.set_anchor(0.5, 70. / 90.);
-
-                // Lower blocks are darker
-                let c = 0.8 + (z as f32 / 50.);
-                sprite.set_color([c, c, c, 1.0]);
-
-                world
-                    .create_entity()
-                    .with(Position::new(x as f64, y as f64, z as f64))
-                    .with(sprite)
-                    .build();
-            }
-        }
-    }
+    create_block(&mut world, block_tex.clone(), &GridPosition::new(0, 0, 0));
+    create_block(&mut world, block_tex.clone(), &GridPosition::new(1, 1, 1));
+    create_block(&mut world, block_tex.clone(), &GridPosition::new(2, 2, 2));
+    // create_block(&mut world, block_tex.clone(), &GridPosition::new(2, 2, 1));
 
     // Build actors
     for x in 0..1 {

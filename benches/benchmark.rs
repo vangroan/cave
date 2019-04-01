@@ -6,7 +6,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use cave::grid::{Grid, GridPosition};
 use cave::pathfinding::{AStar, Locomotion, NoOpCost, NoOpLocomotion, Pathfinder, GO_ANYWHERE};
 
-fn minus_one_benchmark(c: &mut Criterion) {
+fn pathfinding_benchmark(c: &mut Criterion) {
     c.bench_function("Bench Pathfinding 16x16x16 grid", |b| {
         b.iter(|| {
             let grid = Grid::with_size(16, 16, 16);
@@ -38,6 +38,22 @@ fn minus_one_benchmark(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, minus_one_benchmark);
+fn depth_sort_benchmark(c: &mut Criterion) {
+    use cave::pigeon::*;
+
+    c.bench_function("Bench Pigeonhole Sort 16x16x16 grid", |b| {
+        b.iter(|| {
+            let max = 16 * 16 * 16;
+            // (depth, identifier)
+            let mut pigeon = PigeonholeSort::<(i32, i32)>::new(0, max);
+            let mut source: Vec<(i32, i32)> = (0..max * 4).map(|i| (i / 4, i)).collect();
+            let mut target: Vec<(i32, i32)> = vec![Default::default(); source.len()];
+
+            pigeon.sort_into(&mut source, &mut target, |pair| pair.0);
+        });
+    });
+}
+
+criterion_group!(benches, pathfinding_benchmark, depth_sort_benchmark);
 
 criterion_main!(benches);

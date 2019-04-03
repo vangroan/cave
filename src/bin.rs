@@ -24,6 +24,7 @@ use std::sync::Arc;
 
 mod actor;
 mod common;
+mod depthsort;
 mod grid;
 mod isometric;
 mod option;
@@ -31,17 +32,16 @@ mod pathfinding;
 mod pigeon;
 mod position;
 mod settings;
-mod depthsort;
 mod sprite;
 mod tilemap;
 mod view;
 
 use actor::{Actor, WalkerSystem};
 use common::DeltaTime;
+use depthsort::{DepthBuffer, IsometricSorter};
 use grid::{Grid, GridPosition};
 use pathfinding::{components::Pather, systems::PathfindingSystem, AStar, Locomotion, GROUND_WALK};
 use position::Position;
-use depthsort::{DepthBuffer, IsometricSorter};
 use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{Tile, TileObj, Tilemap};
 use view::components::IsometricCamera;

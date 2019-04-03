@@ -4,7 +4,7 @@ use specs::prelude::*;
 use crate::isometric::Isometric;
 use crate::pigeon::PigeonholeSort;
 use crate::position::Position;
-use crate::settings::{TILE_HEIGHT_2D, TILE_WIDTH_2D};
+use crate::settings::flatten_pos;
 use crate::sprite::Sprite;
 use crate::view::components::IsometricCamera;
 
@@ -40,24 +40,25 @@ impl<'a> System<'a> for IsometricSorter {
             .find(|(camera, _)| camera.is_current());
 
         if let Some((_camera, camera_pos)) = maybe_camera {
-            const VIEWPORT_WIDTH: f64 = 10.;
-            const VIEWPORT_HEIGHT: f64 = 10.;
-            let camera_pos_2d = Isometric::iso_to_cart(&camera_pos.to_vector());
+            const VIEWPORT_WIDTH: f64 = 640.;
+            const VIEWPORT_HEIGHT: f64 = 480.;
+            let camera_pos_iso = Isometric::cart_to_iso(&camera_pos.to_vector());
+            let camera_pos_2d = flatten_pos(&camera_pos_iso);
             let tile_rect_2d = (
                 camera_pos_2d.x - (VIEWPORT_WIDTH / 2.),
-                (camera_pos_2d.y - camera_pos_2d.z) - (VIEWPORT_HEIGHT / 2.),
+                camera_pos_2d.y - (VIEWPORT_HEIGHT / 2.),
                 VIEWPORT_WIDTH,
                 VIEWPORT_HEIGHT,
             );
-            // println!("{:?}", tile_rect_2d);
+            println!("{:?}", tile_rect_2d);
 
             let mut unsorted: Vec<DepthItem> = vec![];
 
             for (e, position, sprite) in (&entities, &positions, &mut sprites).join() {
                 // Determine if the sprite is visible in 2D screen space
-                let tile_pos_iso = Isometric::iso_to_cart(&position.to_vector());
-                let tile_pos_2d = na::Vector2::<f64>::new(tile_pos_iso.x, tile_pos_iso.y - tile_pos_iso.z);
-                // println!("sprite pos: {:?}", tile_pos_2d);
+                let tile_pos_iso = Isometric::cart_to_iso(&position.to_vector());
+                let tile_pos_2d = flatten_pos(&tile_pos_iso);
+
                 if !(tile_pos_2d.x >= tile_rect_2d.0
                     && tile_pos_2d.x <= tile_rect_2d.0 + tile_rect_2d.2
                     && tile_pos_2d.y >= tile_rect_2d.1
@@ -66,7 +67,7 @@ impl<'a> System<'a> for IsometricSorter {
                     // Not in viewport
                     continue;
                 }
-
+                println!("sprite pos: {:?}", tile_pos_2d);
                 // Calculate depth
                 // TODO: Once we've defined anchor points and tile subdivions, this should be more intricate
                 let depth =

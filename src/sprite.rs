@@ -10,7 +10,7 @@ use specs::prelude::*;
 use crate::isometric::Isometric;
 use crate::position::Position;
 use crate::settings::*;
-use crate::sort::DepthBuffer;
+use crate::depthsort::DepthBuffer;
 use crate::view::components::IsometricCamera;
 
 #[derive(Component)]

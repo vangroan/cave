@@ -174,10 +174,9 @@ impl<'a> System<'a> for SpriteRenderer {
 
             // Positions are inversed, because world is transformed in the reverse direction
             // of what the camera is doing
-            let transform = c.transform.trans(
-                -(camera_pos_2d.x) + offset_x,
-                -(camera_pos_2d.y) + offset_y,
-            );
+            let transform = c
+                .transform
+                .trans(-(camera_pos_2d.x) + offset_x, -(camera_pos_2d.y) + offset_y);
 
             for item in buffer.contents() {
                 let e = entities.entity(item.entity_id());
@@ -194,7 +193,12 @@ impl<'a> System<'a> for SpriteRenderer {
             rectangle(RED, square, transform, gl);
 
             // Center of camera view
-            rectangle(GREEN, square, transform.trans(camera_pos_2d.x, camera_pos_2d.y), gl);
+            rectangle(
+                GREEN,
+                square,
+                transform.trans(camera_pos_2d.x, camera_pos_2d.y),
+                gl,
+            );
         });
     }
 }

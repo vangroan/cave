@@ -45,10 +45,17 @@ impl<'a> System<'a> for IsometricSorter {
             let camera_pos_iso = Isometric::cart_to_iso(&camera_pos.to_vector());
             // println!("Camera Position: ({}, {}, {})", camera_pos_iso.x, camera_pos_iso.y, camera_pos_iso.z);
             let camera_pos_2d = flatten_pos(&camera_pos_iso);
-            println!("Camera Position: pos({}, {}, {}) iso({}, {}, {}) screen({}, {})",
-                camera_pos.x(), camera_pos.y(), camera_pos.z(),
-                camera_pos_iso.x, camera_pos_iso.y, camera_pos_iso.z,
-                camera_pos_2d.x, camera_pos_2d.y);
+            println!(
+                "Camera Position: pos({}, {}, {}) iso({}, {}, {}) screen({}, {})",
+                camera_pos.x(),
+                camera_pos.y(),
+                camera_pos.z(),
+                camera_pos_iso.x,
+                camera_pos_iso.y,
+                camera_pos_iso.z,
+                camera_pos_2d.x,
+                camera_pos_2d.y
+            );
             let tile_rect_2d = (
                 camera_pos_2d.x - (VIEWPORT_WIDTH / 2.),
                 camera_pos_2d.y - (VIEWPORT_HEIGHT / 2.),

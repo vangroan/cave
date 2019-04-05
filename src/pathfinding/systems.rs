@@ -29,15 +29,12 @@ impl<'a> System<'a> for PathfindingSystem {
     );
 
     fn run(&mut self, (pathfinder, grid, tilemap, locomotions, mut pathers): Self::SystemData) {
-        use rayon::prelude::*;
-        use specs::ParJoin;
-
         let cost_strat = TilemapCost::new(&tilemap);
         let loco_strat = TilemapLocomotion::new(&tilemap, &grid);
 
         // TODO: Parallel join is not reaching rayon threshold, so runs synchronously regardless
         (&mut pathers, &locomotions)
-            .par_join()
+            .join()
             .filter(|(pather, _)| pather.needs_path())
             .for_each(|(pather, locomotion)| {
                 let maybe_request = pather.take_request();

@@ -44,7 +44,7 @@ use pathfinding::{components::Pather, systems::PathfindingSystem, AStar, Locomot
 use position::Position;
 use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{Tile, TileObj, Tilemap};
-use view::components::IsometricCamera;
+use view::{components::IsometricCamera, CutMode, ViewCutMode};
 
 fn create_block(world: &mut World, block_tex: Arc<Texture>, grid_pos: &GridPosition) -> Entity {
     world
@@ -82,9 +82,9 @@ fn main() {
         .unwrap();
 
     // Map Size
-    const MAP_WIDTH: u32 = 10;
-    const MAP_HEIGHT: u32 = 10;
-    const MAP_DEPTH: u32 = 10;
+    const MAP_WIDTH: u32 = 32;
+    const MAP_HEIGHT: u32 = 32;
+    const MAP_DEPTH: u32 = 32;
 
     // Setup ECS
     let mut world = World::new();
@@ -92,6 +92,7 @@ fn main() {
     world.add_resource(Tilemap::with_size(MAP_WIDTH, MAP_HEIGHT, MAP_DEPTH));
     world.add_resource(AStar::new());
     world.add_resource(DepthBuffer::new());
+    world.add_resource(ViewCutMode::default());
     world.register::<Actor>();
     world.register::<IsometricCamera>();
     world.register::<Locomotion>();
@@ -126,7 +127,7 @@ fn main() {
     world
         .create_entity()
         .with(IsometricCamera::new(true))
-        .with(Position::new(0., 0., 0.))
+        .with(Position::new(0., 0., 9.))
         .build();
 
     // Build blocks
@@ -198,6 +199,7 @@ fn main() {
             let entities = world.entities();
             let cameras = world.read_storage::<IsometricCamera>();
             let mut positions = world.write_storage::<Position>();
+            let mut view_cut = world.write_resource::<ViewCutMode>();
             let maybe_camera = (&entities, &cameras, &positions)
                 .join()
                 .find(|(_entity, camera, _position)| camera.is_current());
@@ -232,6 +234,18 @@ fn main() {
                         positions
                             .insert(entity, pos + &Position::new(0., 0., -1.))
                             .unwrap();
+                    }
+                    Key::D1 => {
+                        println!("View from Top");
+                        view_cut.set_mode(CutMode::Top);
+                    }
+                    Key::D2 => {
+                        println!("View from Left");
+                        view_cut.set_mode(CutMode::Left);
+                    }
+                    Key::D3 => {
+                        println!("View from Right");
+                        view_cut.set_mode(CutMode::Right);
                     }
                     _ => {}
                 }

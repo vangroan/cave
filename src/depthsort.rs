@@ -7,6 +7,7 @@ use crate::position::Position;
 use crate::settings::flatten_pos;
 use crate::sprite::Sprite;
 use crate::view::components::IsometricCamera;
+use crate::view::ViewCutMode;
 
 /// Sorts objects according to the isometric projection
 pub struct IsometricSorter {
@@ -24,38 +25,29 @@ impl IsometricSorter {
 impl<'a> System<'a> for IsometricSorter {
     type SystemData = (
         Entities<'a>,
+        Read<'a, ViewCutMode>,
+        Write<'a, DepthBuffer>,
         ReadStorage<'a, Position>,
         ReadStorage<'a, IsometricCamera>,
         WriteStorage<'a, Sprite<Texture>>,
-        Write<'a, DepthBuffer>,
     );
 
-    fn run(&mut self, data: Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, view_cut, mut buffer, positions, cameras, mut sprites): Self::SystemData,
+    ) {
         use specs::Join;
 
-        let (entities, positions, cameras, mut sprites, mut buffer) = data;
         let IsometricSorter { sort } = self;
         let maybe_camera = (&cameras, &positions)
             .join()
             .find(|(camera, _)| camera.is_current());
 
         if let Some((_camera, camera_pos)) = maybe_camera {
-            const VIEWPORT_WIDTH: f64 = 640.;
-            const VIEWPORT_HEIGHT: f64 = 480.;
+            const VIEWPORT_WIDTH: f64 = 1600.;
+            const VIEWPORT_HEIGHT: f64 = 900.;
             let camera_pos_iso = Isometric::cart_to_iso(&camera_pos.to_vector());
-            // println!("Camera Position: ({}, {}, {})", camera_pos_iso.x, camera_pos_iso.y, camera_pos_iso.z);
             let camera_pos_2d = flatten_pos(&camera_pos_iso);
-            println!(
-                "Camera Position: pos({}, {}, {}) iso({}, {}, {}) screen({}, {})",
-                camera_pos.x(),
-                camera_pos.y(),
-                camera_pos.z(),
-                camera_pos_iso.x,
-                camera_pos_iso.y,
-                camera_pos_iso.z,
-                camera_pos_2d.x,
-                camera_pos_2d.y
-            );
             let tile_rect_2d = (
                 camera_pos_2d.x - (VIEWPORT_WIDTH / 2.),
                 camera_pos_2d.y - (VIEWPORT_HEIGHT / 2.),
@@ -66,6 +58,10 @@ impl<'a> System<'a> for IsometricSorter {
             let mut unsorted: Vec<DepthItem> = vec![];
 
             for (e, position, sprite) in (&entities, &positions, &mut sprites).join() {
+                if view_cut.is_outside(&camera_pos, &position) {
+                    continue;
+                }
+
                 // Determine if the sprite is visible in 2D screen space
                 let tile_pos_iso = Isometric::cart_to_iso(&position.to_vector());
                 let tile_pos_2d = flatten_pos(&tile_pos_iso);

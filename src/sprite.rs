@@ -149,16 +149,18 @@ impl<'a> System<'a> for SpriteRenderer {
 
         let SpriteRenderer { gl, .. } = self;
 
-        let camera_pos = (&cameras, &positions)
+        let camera_pos_iso = (&cameras, &positions)
             .join()
             .find(|(camera, _position)| camera.is_current())
             .map(|(_camera, position)| Isometric::cart_to_iso(position.to_vector()))
             .unwrap_or(na::Vector3::new(0., 0., 0.));
-        let camera_pos_2d = na::Vector2::<f64>::new(camera_pos.x, camera_pos.y + camera_pos.z);
+        // let camera_pos_2d = na::Vector2::<f64>::new(camera_pos_iso.x, camera_pos_iso.y + camera_pos_iso.z);
+        let camera_pos_2d = flatten_pos(&camera_pos_iso);
 
         const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
         const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
         const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+        const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
 
         let square = rectangle::square(0.0, 0.0, 10.0);
 
@@ -170,22 +172,17 @@ impl<'a> System<'a> for SpriteRenderer {
             // Clear the screen.
             clear(BLACK, gl);
 
+            // Positions are inversed, because world is transformed in the reverse direction
+            // of what the camera is doing
             let transform = c.transform.trans(
-                camera_pos_2d.x * 80. + offset_x,
-                camera_pos_2d.y * 80. + offset_y,
+                -(camera_pos_2d.x) + offset_x,
+                -(camera_pos_2d.y) + offset_y,
             );
 
             for item in buffer.contents() {
                 let e = entities.entity(item.entity_id());
                 if let Some(sprite) = sprites.get(e) {
                     if let Some(pos) = positions.get(e) {
-                        // let iso_pos = Isometric::cart_to_iso(&na::Vector3::<f64>::new(
-                        //     // TODO: This works but doesn't make sense. Refactor
-                        //     (pos.x() + HALF_TILE_3D) * TILE_WIDTH_2D,
-                        //     (pos.y() + HALF_TILE_3D) * TILE_WIDTH_2D,
-                        //     pos.z() * TILE_DEPTH_2D,
-                        // ));
-                        // sprite.draw(transform.trans(iso_pos.x, iso_pos.y - iso_pos.z), gl);
                         let iso_pos = Isometric::cart_to_iso(&pos.to_vector());
                         let screen_pos = flatten_pos(&iso_pos);
                         sprite.draw(transform.trans(screen_pos.x, screen_pos.y), gl);
@@ -193,7 +190,11 @@ impl<'a> System<'a> for SpriteRenderer {
                 }
             }
 
+            // Center of world
             rectangle(RED, square, transform, gl);
+
+            // Center of camera view
+            rectangle(GREEN, square, transform.trans(camera_pos_2d.x, camera_pos_2d.y), gl);
         });
     }
 }

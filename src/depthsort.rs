@@ -43,14 +43,18 @@ impl<'a> System<'a> for IsometricSorter {
             const VIEWPORT_WIDTH: f64 = 640.;
             const VIEWPORT_HEIGHT: f64 = 480.;
             let camera_pos_iso = Isometric::cart_to_iso(&camera_pos.to_vector());
+            // println!("Camera Position: ({}, {}, {})", camera_pos_iso.x, camera_pos_iso.y, camera_pos_iso.z);
             let camera_pos_2d = flatten_pos(&camera_pos_iso);
+            println!("Camera Position: pos({}, {}, {}) iso({}, {}, {}) screen({}, {})",
+                camera_pos.x(), camera_pos.y(), camera_pos.z(),
+                camera_pos_iso.x, camera_pos_iso.y, camera_pos_iso.z,
+                camera_pos_2d.x, camera_pos_2d.y);
             let tile_rect_2d = (
                 camera_pos_2d.x - (VIEWPORT_WIDTH / 2.),
                 camera_pos_2d.y - (VIEWPORT_HEIGHT / 2.),
                 VIEWPORT_WIDTH,
                 VIEWPORT_HEIGHT,
             );
-            println!("{:?}", tile_rect_2d);
 
             let mut unsorted: Vec<DepthItem> = vec![];
 
@@ -67,7 +71,7 @@ impl<'a> System<'a> for IsometricSorter {
                     // Not in viewport
                     continue;
                 }
-                println!("sprite pos: {:?}", tile_pos_2d);
+
                 // Calculate depth
                 // TODO: Once we've defined anchor points and tile subdivions, this should be more intricate
                 let depth =

@@ -126,7 +126,7 @@ fn main() {
     world
         .create_entity()
         .with(IsometricCamera::new(true))
-        .with(Position::new(0., 0., 5.))
+        .with(Position::new(0., 0., 0.))
         .build();
 
     // Build blocks
@@ -205,22 +205,22 @@ fn main() {
                 match key {
                     Key::Up => {
                         positions
-                            .insert(entity, pos + &Position::new(1., 1., 0.))
+                            .insert(entity, pos + &Position::new(-1., -1., 0.))
                             .unwrap();
                     }
                     Key::Down => {
                         positions
-                            .insert(entity, pos + &Position::new(-1., -1., 0.))
+                            .insert(entity, pos + &Position::new(1., 1., 0.))
                             .unwrap();
                     }
                     Key::Left => {
                         positions
-                            .insert(entity, pos + &Position::new(1., -1., 0.))
+                            .insert(entity, pos + &Position::new(-1., 1., 0.))
                             .unwrap();
                     }
                     Key::Right => {
                         positions
-                            .insert(entity, pos + &Position::new(-1., 1., 0.))
+                            .insert(entity, pos + &Position::new(1., -1., 0.))
                             .unwrap();
                     }
                     Key::Q => {
@@ -238,16 +238,20 @@ fn main() {
             }
         }
 
-        if let Some(r) = e.render_args() {
-            // app.render(&r);
-            world.add_resource(OnRender::new(r));
-            render_dispatcher.dispatch(&mut world.res);
+        if let Some(u) = e.update_args() {
+            world.add_resource(DeltaTime(u.dt));
+            // pathfinding_system.run_now(&world.res);
+            // walker_system.run_now(&world.res);
+            // isometric_sorter_system.run_now(&world.res);
+            update_dispatcher.dispatch(&mut world.res);
             world.maintain();
         }
 
-        if let Some(u) = e.update_args() {
-            world.add_resource(DeltaTime(u.dt));
-            update_dispatcher.dispatch(&mut world.res);
+        if let Some(r) = e.render_args() {
+            // app.render(&r);
+            world.add_resource(OnRender::new(r));
+            // sprite_render_system.run_now(&world.res);
+            render_dispatcher.dispatch(&mut world.res);
             world.maintain();
         }
     }

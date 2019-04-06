@@ -46,10 +46,10 @@ use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{Tile, TileObj, Tilemap};
 use view::{components::IsometricCamera, CutMode, ViewCutMode};
 
-fn create_block(world: &mut World, block_tex: Arc<Texture>, grid_pos: &GridPosition) -> Entity {
+fn create_block(world: &mut World, tile: Tile, block_tex: Arc<Texture>, grid_pos: &GridPosition) -> Entity {
     world
         .write_resource::<Tilemap>()
-        .set_tile(&grid_pos, Tile::GreyBlock);
+        .set_tile(&grid_pos, tile);
 
     let mut sprite = Sprite::from_texture(block_tex);
     // sprite.set_position(pos.x, pos.y - pos.z);
@@ -82,9 +82,9 @@ fn main() {
         .unwrap();
 
     // Map Size
-    const MAP_WIDTH: u32 = 32;
-    const MAP_HEIGHT: u32 = 32;
-    const MAP_DEPTH: u32 = 32;
+    const MAP_WIDTH: u32 = 16;
+    const MAP_HEIGHT: u32 = 16;
+    const MAP_DEPTH: u32 = 16;
 
     // Setup ECS
     let mut world = World::new();
@@ -122,6 +122,9 @@ fn main() {
     let man_tex = Arc::new(
         Texture::from_path(PathBuf::from("resources/blueman.png"), &sprite_settings).unwrap(),
     );
+    let ladder_tex = Arc::new(
+        Texture::from_path(PathBuf::from("resources/ladder.png"), &sprite_settings).unwrap(),
+    );
 
     // Build Camera
     world
@@ -150,10 +153,16 @@ fn main() {
                 //     continue;
                 // }
                 let grid_pos = GridPosition::new(x, y, z);
-                create_block(&mut world, block_tex.clone(), &grid_pos);
+                create_block(&mut world, Tile::GreyBlock, block_tex.clone(), &grid_pos);
             }
         }
     }
+
+    // Build Ladders
+    create_block(&mut world, Tile::Ladder, ladder_tex.clone(), &GridPosition::new(5, 5, 8));
+    create_block(&mut world, Tile::Ladder, ladder_tex.clone(), &GridPosition::new(5, 5, 7));
+    create_block(&mut world, Tile::Ladder, ladder_tex.clone(), &GridPosition::new(5, 5, 6));
+    create_block(&mut world, Tile::Ladder, ladder_tex.clone(), &GridPosition::new(5, 5, 5));
 
     // create_block(&mut world, block_tex.clone(), &GridPosition::new(0, 0, 0));
     // create_block(&mut world, block_tex.clone(), &GridPosition::new(1, 1, 1));

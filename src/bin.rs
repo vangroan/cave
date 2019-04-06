@@ -17,12 +17,14 @@ use piston::event_loop::*;
 use piston::input::*;
 use piston::window::WindowSettings;
 use specs::prelude::*;
+use specs::Entity;
 
 use std::path::PathBuf;
 use std::sync::Arc;
 
 mod actor;
 mod common;
+mod depthsort;
 mod grid;
 mod isometric;
 mod option;
@@ -30,20 +32,43 @@ mod pathfinding;
 mod pigeon;
 mod position;
 mod settings;
-mod sort;
 mod sprite;
 mod tilemap;
 mod view;
 
 use actor::{Actor, WalkerSystem};
 use common::DeltaTime;
+use depthsort::{DepthBuffer, IsometricSorter};
 use grid::{Grid, GridPosition};
 use pathfinding::{components::Pather, systems::PathfindingSystem, AStar, Locomotion, GROUND_WALK};
 use position::Position;
-use sort::{DepthBuffer, IsometricSorter};
 use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{Tile, TileObj, Tilemap};
-use view::components::IsometricCamera;
+use view::{components::IsometricCamera, CutMode, ViewCutMode};
+
+fn create_block(world: &mut World, block_tex: Arc<Texture>, grid_pos: &GridPosition) -> Entity {
+    world
+        .write_resource::<Tilemap>()
+        .set_tile(&grid_pos, Tile::GreyBlock);
+
+    let mut sprite = Sprite::from_texture(block_tex);
+    // sprite.set_position(pos.x, pos.y - pos.z);
+    sprite.set_anchor(0.5, 70. / 90.);
+
+    // Lower blocks are darker
+    let c = 0.8 + (grid_pos.z() as f32 / 50.);
+    sprite.set_color([c, c, c, 1.0]);
+
+    world
+        .create_entity()
+        .with(Position::new(
+            grid_pos.x() as f64,
+            grid_pos.y() as f64,
+            grid_pos.z() as f64,
+        ))
+        .with(sprite)
+        .build()
+}
 
 fn main() {
     // Change this to OpenGL::V2_1 if not working.
@@ -67,6 +92,7 @@ fn main() {
     world.add_resource(Tilemap::with_size(MAP_WIDTH, MAP_HEIGHT, MAP_DEPTH));
     world.add_resource(AStar::new());
     world.add_resource(DepthBuffer::new());
+    world.add_resource(ViewCutMode::default());
     world.register::<Actor>();
     world.register::<IsometricCamera>();
     world.register::<Locomotion>();
@@ -101,13 +127,13 @@ fn main() {
     world
         .create_entity()
         .with(IsometricCamera::new(true))
-        .with(Position::new(0., 0., 5.))
+        .with(Position::new(0., 0., 9.))
         .build();
 
     // Build blocks
     for x in 0..MAP_WIDTH as i32 {
         for y in 0..MAP_HEIGHT as i32 {
-            for z in 0..10 {
+            for z in 0..MAP_DEPTH as i32 {
                 // if x + y + z > 7 {
                 //     continue;
                 // }
@@ -120,27 +146,19 @@ fn main() {
                 if z == 9 && (x % 2 == 0 || y % 2 == 0) {
                     continue;
                 }
+                // if x != y || y != z || x != z {
+                //     continue;
+                // }
                 let grid_pos = GridPosition::new(x, y, z);
-                world
-                    .write_resource::<Tilemap>()
-                    .set_tile(&grid_pos, Tile::GreyBlock);
-
-                let mut sprite = Sprite::from_texture(block_tex.clone());
-                // sprite.set_position(pos.x, pos.y - pos.z);
-                sprite.set_anchor(0.5, 70. / 90.);
-
-                // Lower blocks are darker
-                let c = 0.8 + (z as f32 / 50.);
-                sprite.set_color([c, c, c, 1.0]);
-
-                world
-                    .create_entity()
-                    .with(Position::new(x as f64, y as f64, z as f64))
-                    .with(sprite)
-                    .build();
+                create_block(&mut world, block_tex.clone(), &grid_pos);
             }
         }
     }
+
+    // create_block(&mut world, block_tex.clone(), &GridPosition::new(0, 0, 0));
+    // create_block(&mut world, block_tex.clone(), &GridPosition::new(1, 1, 1));
+    // create_block(&mut world, block_tex.clone(), &GridPosition::new(2, 2, 2));
+    // create_block(&mut world, block_tex.clone(), &GridPosition::new(2, 2, 1));
 
     // Build actors
     for x in 0..1 {
@@ -181,6 +199,7 @@ fn main() {
             let entities = world.entities();
             let cameras = world.read_storage::<IsometricCamera>();
             let mut positions = world.write_storage::<Position>();
+            let mut view_cut = world.write_resource::<ViewCutMode>();
             let maybe_camera = (&entities, &cameras, &positions)
                 .join()
                 .find(|(_entity, camera, _position)| camera.is_current());
@@ -188,22 +207,22 @@ fn main() {
                 match key {
                     Key::Up => {
                         positions
-                            .insert(entity, pos + &Position::new(1., 1., 0.))
+                            .insert(entity, pos + &Position::new(-1., -1., 0.))
                             .unwrap();
                     }
                     Key::Down => {
                         positions
-                            .insert(entity, pos + &Position::new(-1., -1., 0.))
+                            .insert(entity, pos + &Position::new(1., 1., 0.))
                             .unwrap();
                     }
                     Key::Left => {
                         positions
-                            .insert(entity, pos + &Position::new(1., -1., 0.))
+                            .insert(entity, pos + &Position::new(-1., 1., 0.))
                             .unwrap();
                     }
                     Key::Right => {
                         positions
-                            .insert(entity, pos + &Position::new(-1., 1., 0.))
+                            .insert(entity, pos + &Position::new(1., -1., 0.))
                             .unwrap();
                     }
                     Key::Q => {
@@ -216,21 +235,37 @@ fn main() {
                             .insert(entity, pos + &Position::new(0., 0., -1.))
                             .unwrap();
                     }
+                    Key::D1 => {
+                        println!("View from Top");
+                        view_cut.set_mode(CutMode::Top);
+                    }
+                    Key::D2 => {
+                        println!("View from Left");
+                        view_cut.set_mode(CutMode::Left);
+                    }
+                    Key::D3 => {
+                        println!("View from Right");
+                        view_cut.set_mode(CutMode::Right);
+                    }
                     _ => {}
                 }
             }
         }
 
-        if let Some(r) = e.render_args() {
-            // app.render(&r);
-            world.add_resource(OnRender::new(r));
-            render_dispatcher.dispatch(&mut world.res);
+        if let Some(u) = e.update_args() {
+            world.add_resource(DeltaTime(u.dt));
+            // pathfinding_system.run_now(&world.res);
+            // walker_system.run_now(&world.res);
+            // isometric_sorter_system.run_now(&world.res);
+            update_dispatcher.dispatch(&mut world.res);
             world.maintain();
         }
 
-        if let Some(u) = e.update_args() {
-            world.add_resource(DeltaTime(u.dt));
-            update_dispatcher.dispatch(&mut world.res);
+        if let Some(r) = e.render_args() {
+            // app.render(&r);
+            world.add_resource(OnRender::new(r));
+            // sprite_render_system.run_now(&world.res);
+            render_dispatcher.dispatch(&mut world.res);
             world.maintain();
         }
     }

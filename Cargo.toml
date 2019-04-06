@@ -30,7 +30,7 @@ pistoncore-glutin_window = "0.54.0"
 piston2d-opengl_graphics = "0.59.0"
 fps_counter = "1.0.0"
 rayon = "1.0"
-specs = "0.14"
+specs = { version = "0.14", default-features = false } # disable rayon as it thrashes CPU
 specs-derive = "0.4"
 threadpool = "1.7"
 

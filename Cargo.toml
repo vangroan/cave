@@ -39,3 +39,7 @@ threadpool = "1.7"
 fs_extra = "1.1.0"
 glob = "0.2.*"
 itertools = "0.7.*"
+
+[profile.release]
+debug = true # keep symbols for backtrace in the wild
+panic = "unwind"

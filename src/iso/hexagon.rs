@@ -14,7 +14,7 @@ use specs::prelude::*;
 /// The hexagon does not keep position information, and thus
 /// its position within the world must be passed in with each
 /// intersection test;
-#[derive(Component)]
+#[derive(Component, Debug)]
 #[storage(DenseVecStorage)]
 pub struct Hexagon {
     min_x: f64,
@@ -97,6 +97,39 @@ impl Hexagon {
     }
 }
 
+/// A specialised point position that stores the various
+/// projected components of a point on the hexagon.
+#[derive(Debug)]
+pub struct HexPoint {
+    x: f64,
+    y: f64,
+    h: f64,
+    v: f64,
+}
+
+impl HexPoint {
+    fn new(x: f64, y: f64, h: f64, v: f64) -> Self {
+        HexPoint { x, y, h, v }
+    }
+
+    /// Creates a new `HexPoint` from a 3-dimensional position
+    pub fn from_position(cart_pos: na::Vector3<f64>) -> Self {
+        use std::f64::consts::PI;
+
+        // Projection along isometric axese
+        let x = cart_pos.x + cart_pos.z;
+        let y = cart_pos.y + cart_pos.z;
+
+        // Horizontal 2D projection
+        let h = (x - y) * f64::cos(PI / 6.);
+
+        // Vertical 2D projection
+        let v = (x + y) / 2.;
+
+        HexPoint::new(x, y, h, v)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -109,13 +142,44 @@ mod test {
             Vector3::new(1., 1., 1.),
         ));
         let pos1 = Vector3::new(0., 0., 0.);
+        println!("{:?}", hex1);
+        println!("{:?}", pos1);
 
         let hex2 = Hexagon::from_bounding_box(&BoundingBox::new(
             Vector3::new(0., 0., 0.),
             Vector3::new(1., 1., 1.),
         ));
-        let pos2 = Vector3::new(0., 0., 0.);
+        let pos2 = Vector3::new(2., 2., 0.);
+        println!("{:?}", hex2);
+        println!("{:?}", pos2);
 
-        assert!(Hexagon::intersect(&hex1, &pos1, &hex2, &pos2), "Hexagons did not intersect");
+        assert!(
+            Hexagon::intersect(&hex1, &pos1, &hex2, &pos2),
+            "Hexagons did not intersect"
+        );
+    }
+
+    #[test]
+    fn test_hexpoint() {
+        let point1 = HexPoint::from_position(Vector3::new(1., 1., 1.));
+        println!("{:?}", point1);
+        assert_eq!(2., point1.x);
+        assert_eq!(2., point1.y);
+        assert_eq!(0., point1.h);
+        assert_eq!(2., point1.v);
+
+        let point2 = HexPoint::from_position(Vector3::new(1., 0., 0.));
+        println!("{:?}", point2);
+        assert_eq!(1., point2.x);
+        assert_eq!(0., point2.y);
+        assert_eq!(0.8660254037844387, point2.h);
+        assert_eq!(0.5, point2.v);
+
+        let point3 = HexPoint::from_position(Vector3::new(0., 1., 1.));
+        println!("{:?}", point3);
+        assert_eq!(1., point3.x);
+        assert_eq!(2., point3.y);
+        assert_eq!(-0.8660254037844387, point3.h);
+        assert_eq!(1.5, point3.v);
     }
 }

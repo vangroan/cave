@@ -233,7 +233,12 @@ fn main() {
     // }
 
     // Build Actor
-    create_actor(&mut world, man_tex.clone(), &GridPosition::new(9, 9, 5), &GridPosition::new(4, 4, 9));
+    create_actor(
+        &mut world,
+        man_tex.clone(),
+        &GridPosition::new(9, 9, 5),
+        &GridPosition::new(4, 4, 9),
+    );
 
     let settings = EventSettings::new().max_fps(60).ups(60);
 

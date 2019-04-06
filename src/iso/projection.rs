@@ -1,6 +1,3 @@
-
 pub struct IsoProjection;
 
-impl IsoProjection {
-
-}
+impl IsoProjection {}

@@ -1,15 +1,13 @@
 use opengl_graphics::{GlGraphics, OpenGL};
 
+/// Wrapper resource for Graphics object.
+///
+/// Allows passing graphics to systems.
 pub struct Graphix(GlGraphics);
 
 impl Graphix {
     pub fn new(gl: GlGraphics) -> Self {
         Graphix(gl)
-    }
-
-    #[inline(always)]
-    pub fn gl(&self) -> &GlGraphics {
-        &self.0
     }
 
     #[inline(always)]

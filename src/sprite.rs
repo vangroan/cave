@@ -147,7 +147,7 @@ impl<'a> System<'a> for SpriteRenderer {
         use graphics::*;
         use specs::Join;
 
-        let mut gl = graphics.gl_mut();
+        let gl = graphics.gl_mut();
 
         let camera_pos_iso = (&cameras, &positions)
             .join()

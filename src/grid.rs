@@ -1,8 +1,10 @@
 use na::Vector3;
 use specs::prelude::*;
 
-// TODO: Make 3D
-const OFFSETS: [(i32, i32, i32); 8] = [
+pub const NEIGHBOUR_COUNT_2D: usize = 8;
+pub const NEIGHBOUR_COUNT_3D: usize = 26;
+
+const OFFSETS: [(i32, i32, i32); NEIGHBOUR_COUNT_2D] = [
     (-1, -1, 0),
     (0, -1, 0),
     (1, -1, 0),
@@ -11,6 +13,38 @@ const OFFSETS: [(i32, i32, i32); 8] = [
     (-1, 1, 0),
     (0, 1, 0),
     (1, 1, 0),
+];
+
+const OFFSETS_3D: [(i32, i32, i32); NEIGHBOUR_COUNT_3D] = [
+    // Middle Level
+    (-1, -1, 0),
+    (0, -1, 0),
+    (1, -1, 0),
+    (-1, 0, 0),
+    (1, 0, 0),
+    (-1, 1, 0),
+    (0, 1, 0),
+    (1, 1, 0),
+    // Upper Level
+    (-1, -1, 1),
+    (0, -1, 1),
+    (1, -1, 1),
+    (-1, 0, 1),
+    (0, 0, 1),
+    (1, 0, 1),
+    (-1, 1, 1),
+    (0, 1, 1),
+    (1, 1, 1),
+    // Lower Level
+    (-1, -1, -1),
+    (0, -1, -1),
+    (1, -1, -1),
+    (-1, 0, -1),
+    (0, 0, -1),
+    (1, 0, -1),
+    (-1, 1, -1),
+    (0, 1, -1),
+    (1, 1, -1),
 ];
 
 /// Return a one dimensional array or vector index given
@@ -51,11 +85,31 @@ impl Grid {
         (self.size.x, self.size.y, self.size.z)
     }
 
-    pub fn neighbours(&self, pos: &GridPosition) -> [Option<GridPosition>; 8] {
+    pub fn neighbours(&self, pos: &GridPosition) -> [Option<GridPosition>; NEIGHBOUR_COUNT_2D] {
         let mut n = [None, None, None, None, None, None, None, None];
 
         for i in 0..8 {
             let offset = OFFSETS[i];
+            let v = Vector3::<i32>::new(pos.0.x + offset.0, pos.0.y + offset.1, pos.0.z + offset.2);
+            let new_pos = GridPosition(v);
+            n[i] = if self.in_bounds(&new_pos) {
+                Some(new_pos)
+            } else {
+                None
+            }
+        }
+
+        n
+    }
+
+    pub fn neighbours_3d(&self, pos: &GridPosition) -> [Option<GridPosition>; NEIGHBOUR_COUNT_3D] {
+        let mut n = [
+            None, None, None, None, None, None, None, None, None, None, None, None, None, None,
+            None, None, None, None, None, None, None, None, None, None, None, None,
+        ];
+
+        for i in 0..26 {
+            let offset = OFFSETS_3D[i];
             let v = Vector3::<i32>::new(pos.0.x + offset.0, pos.0.y + offset.1, pos.0.z + offset.2);
             let new_pos = GridPosition(v);
             n[i] = if self.in_bounds(&new_pos) {

@@ -77,7 +77,8 @@ impl Pathfinder for AStar {
                 );
             }
 
-            let neighbours = grid.neighbours(&node_pos);
+            // TODO: Conditionally either do a 2d or 3d neighbour search
+            let neighbours = grid.neighbours_3d(&node_pos);
             let in_bound_neighbours = neighbours
                 .into_iter()
                 .filter_map(|maybe_neigh| maybe_neigh.as_ref());
@@ -88,7 +89,6 @@ impl Pathfinder for AStar {
                     continue;
                 }
 
-                // TODO: Rethink how to pass in Cost func so we don't have all these ownership issues with tilemap
                 let cost = cost_strat.is_passable(&node_pos, &neigh_pos);
                 if cost == Cost::Blocked {
                     continue;

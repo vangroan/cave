@@ -31,6 +31,14 @@ impl Tilemap {
             .map(|tile| tile != &Tile::GreyBlock)
             .unwrap_or(false)
     }
+
+    pub fn is_ladder(&self, pos: &GridPosition) -> bool {
+        // TODO: Should we bounds check?
+        self.data
+            .get(grid_index(&self.size, pos))
+            .map(|tile| tile != &Tile::Ladder)
+            .unwrap_or(false)
+    }
 }
 
 impl Default for Tilemap {

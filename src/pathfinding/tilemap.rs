@@ -50,10 +50,11 @@ impl<'a> LocomotionStrategy for TilemapLocomotion<'a> {
         _source: &GridPosition,
         target: &GridPosition,
     ) -> bool {
+        let beneath = GridPosition::new(target.x(), target.y(), target.z() - 1);
+        let overhead = GridPosition::new(target.x(), target.y(), target.z() + 1);
+
         if locomotion.has_method(GROUND_WALK) {
             // "I need solid ground to stand on"
-            let beneath = GridPosition::new(target.x(), target.y(), target.z() - 1);
-
             if !self.grid.in_bounds(&beneath) {
                 // Bottom, or edge, of world
                 return false;
@@ -61,6 +62,18 @@ impl<'a> LocomotionStrategy for TilemapLocomotion<'a> {
 
             if !self.tilemap.is_passable(&beneath) {
                 // "I can stand on this"
+                return true;
+            }
+        }
+
+        if locomotion.has_method(CLIMB_LADDERS) {
+            // I can climb down ladders
+            if !self.tilemap.is_ladder(&beneath) {
+                return true;
+            }
+
+            // I can climb up ladders
+            if !self.tilemap.is_ladder(&overhead) {
                 return true;
             }
         }

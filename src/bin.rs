@@ -40,19 +40,23 @@ use actor::{Actor, WalkerSystem};
 use common::DeltaTime;
 use depthsort::{DepthBuffer, IsometricSorter};
 use grid::{Grid, GridPosition};
-use pathfinding::{components::Pather, systems::PathfindingSystem, AStar, Locomotion, GROUND_WALK};
+use pathfinding::{
+    components::Pather, systems::PathfindingSystem, AStar, Locomotion, CLIMB_LADDERS, GROUND_WALK,
+};
 use position::Position;
 use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{Tile, TileObj, Tilemap};
 use view::{components::IsometricCamera, CutMode, ViewCutMode};
 
-fn create_block(world: &mut World, tile: Tile, block_tex: Arc<Texture>, grid_pos: &GridPosition) -> Entity {
-    world
-        .write_resource::<Tilemap>()
-        .set_tile(&grid_pos, tile);
+fn create_block(
+    world: &mut World,
+    tile: Tile,
+    block_tex: Arc<Texture>,
+    grid_pos: &GridPosition,
+) -> Entity {
+    world.write_resource::<Tilemap>().set_tile(&grid_pos, tile);
 
     let mut sprite = Sprite::from_texture(block_tex);
-    // sprite.set_position(pos.x, pos.y - pos.z);
     sprite.set_anchor(0.5, 70. / 90.);
 
     // Lower blocks are darker
@@ -159,10 +163,30 @@ fn main() {
     }
 
     // Build Ladders
-    create_block(&mut world, Tile::Ladder, ladder_tex.clone(), &GridPosition::new(5, 5, 8));
-    create_block(&mut world, Tile::Ladder, ladder_tex.clone(), &GridPosition::new(5, 5, 7));
-    create_block(&mut world, Tile::Ladder, ladder_tex.clone(), &GridPosition::new(5, 5, 6));
-    create_block(&mut world, Tile::Ladder, ladder_tex.clone(), &GridPosition::new(5, 5, 5));
+    create_block(
+        &mut world,
+        Tile::Ladder,
+        ladder_tex.clone(),
+        &GridPosition::new(5, 5, 8),
+    );
+    create_block(
+        &mut world,
+        Tile::Ladder,
+        ladder_tex.clone(),
+        &GridPosition::new(5, 5, 7),
+    );
+    create_block(
+        &mut world,
+        Tile::Ladder,
+        ladder_tex.clone(),
+        &GridPosition::new(5, 5, 6),
+    );
+    create_block(
+        &mut world,
+        Tile::Ladder,
+        ladder_tex.clone(),
+        &GridPosition::new(5, 5, 5),
+    );
 
     // create_block(&mut world, block_tex.clone(), &GridPosition::new(0, 0, 0));
     // create_block(&mut world, block_tex.clone(), &GridPosition::new(1, 1, 1));
@@ -190,9 +214,9 @@ fn main() {
                 .create_entity()
                 .with(Position::new(x as f64, y as f64, z as f64))
                 .with(sprite)
-                .with(Actor::new())
-                .with(Pather::with_request(grid_pos, GridPosition::new(4, 9, 9)))
-                .with(Locomotion::new(&[GROUND_WALK]))
+                .with(Actor::with_speed(1.0))
+                .with(Pather::with_request(grid_pos, GridPosition::new(9, 9, 5)))
+                .with(Locomotion::new(&[GROUND_WALK, CLIMB_LADDERS]))
                 .build();
         }
     }

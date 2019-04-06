@@ -13,7 +13,11 @@ pub struct Actor {
 
 impl Actor {
     pub fn new() -> Self {
-        Actor { walk_speed: 4.0 }
+        Actor::with_speed(4.0)
+    }
+
+    pub fn with_speed(walk_speed: f64) -> Self {
+        Actor { walk_speed }
     }
 }
 

@@ -5,6 +5,7 @@ extern crate specs;
 #[macro_use]
 extern crate specs_derive;
 
+pub mod app;
 pub mod grid;
 pub mod iso;
 pub mod pathfinding;

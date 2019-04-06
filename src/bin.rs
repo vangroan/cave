@@ -4,6 +4,7 @@ extern crate graphics;
 extern crate nalgebra as na;
 extern crate num_traits as nt;
 extern crate opengl_graphics;
+extern crate petgraph;
 extern crate piston;
 extern crate rayon;
 extern crate specs;
@@ -71,6 +72,29 @@ fn create_block(
             grid_pos.z() as f64,
         ))
         .with(sprite)
+        .build()
+}
+
+fn create_actor(
+    world: &mut World,
+    man_tex: Arc<Texture>,
+    grid_pos: &GridPosition,
+    path_to: &GridPosition,
+) -> Entity {
+    let mut sprite = Sprite::from_texture(man_tex.clone());
+    sprite.set_anchor(0.5, 0.9);
+
+    world
+        .create_entity()
+        .with(Position::new(
+            grid_pos.x() as f64,
+            grid_pos.y() as f64,
+            grid_pos.z() as f64,
+        ))
+        .with(sprite)
+        .with(Actor::with_speed(1.0))
+        .with(Pather::with_request(grid_pos.clone(), path_to.clone()))
+        .with(Locomotion::new(&[GROUND_WALK, CLIMB_LADDERS]))
         .build()
 }
 
@@ -194,32 +218,22 @@ fn main() {
     // create_block(&mut world, block_tex.clone(), &GridPosition::new(2, 2, 1));
 
     // Build actors
-    for x in 0..1 {
-        for y in 0..1 {
-            if (x + y) % 2 != 0 {
-                continue;
-            }
-            if x >= 5 && y >= 5 {
-                continue;
-            }
+    // for x in 0..1 {
+    //     for y in 0..1 {
+    //         if (x + y) % 2 != 0 {
+    //             continue;
+    //         }
+    //         if x >= 5 && y >= 5 {
+    //             continue;
+    //         }
 
-            let z = 9;
-            let grid_pos = GridPosition::new(x, y, z);
+    //         let z = 9;
+    //         create_actor(&mut world, man_tex.clone(), &GridPosition::new(x, y, z), &GridPosition::new(9, 9, 5));
+    //     }
+    // }
 
-            let mut sprite = Sprite::from_texture(man_tex.clone());
-            // sprite.set_position(pos.x, pos.y - pos.z);
-            sprite.set_anchor(0.5, 0.9);
-
-            world
-                .create_entity()
-                .with(Position::new(x as f64, y as f64, z as f64))
-                .with(sprite)
-                .with(Actor::with_speed(1.0))
-                .with(Pather::with_request(grid_pos, GridPosition::new(9, 9, 5)))
-                .with(Locomotion::new(&[GROUND_WALK, CLIMB_LADDERS]))
-                .build();
-        }
-    }
+    // Build Actor
+    create_actor(&mut world, man_tex.clone(), &GridPosition::new(9, 9, 5), &GridPosition::new(4, 4, 9));
 
     let settings = EventSettings::new().max_fps(60).ups(60);
 

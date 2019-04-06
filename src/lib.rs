@@ -6,6 +6,7 @@ extern crate specs;
 extern crate specs_derive;
 
 pub mod grid;
+pub mod iso;
 pub mod pathfinding;
 pub mod pigeon;
 pub mod tilemap;

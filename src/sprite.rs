@@ -10,6 +10,7 @@ use specs::prelude::*;
 use crate::depthsort::DepthBuffer;
 use crate::isometric::Isometric;
 use crate::position::Position;
+use crate::render::Graphix;
 use crate::settings::*;
 use crate::view::components::IsometricCamera;
 
@@ -120,13 +121,11 @@ where
     }
 }
 
-pub struct SpriteRenderer {
-    gl: GlGraphics,
-}
+pub struct SpriteRenderer;
 
 impl SpriteRenderer {
-    pub fn from_graphics(gl: GlGraphics) -> Self {
-        SpriteRenderer { gl }
+    pub fn new() -> Self {
+        SpriteRenderer
     }
 }
 
@@ -134,6 +133,7 @@ impl<'a> System<'a> for SpriteRenderer {
     type SystemData = (
         Entities<'a>,
         Read<'a, OnRender>,
+        Write<'a, Graphix>,
         ReadStorage<'a, IsometricCamera>,
         ReadStorage<'a, Sprite<Texture>>,
         ReadStorage<'a, Position>,
@@ -142,12 +142,12 @@ impl<'a> System<'a> for SpriteRenderer {
 
     fn run(
         &mut self,
-        (entities, on_render, cameras, sprites, positions, buffer): Self::SystemData,
+        (entities, on_render, mut graphics, cameras, sprites, positions, buffer): Self::SystemData,
     ) {
         use graphics::*;
         use specs::Join;
 
-        let SpriteRenderer { gl, .. } = self;
+        let mut gl = graphics.gl_mut();
 
         let camera_pos_iso = (&cameras, &positions)
             .join()

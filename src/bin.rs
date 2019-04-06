@@ -32,6 +32,7 @@ mod option;
 mod pathfinding;
 mod pigeon;
 mod position;
+mod render;
 mod settings;
 mod sprite;
 mod tilemap;
@@ -45,6 +46,7 @@ use pathfinding::{
     components::Pather, systems::PathfindingSystem, AStar, Locomotion, CLIMB_LADDERS, GROUND_WALK,
 };
 use position::Position;
+use render::Graphix;
 use sprite::{OnRender, Sprite, SpriteRenderer};
 use tilemap::{Tile, TileObj, Tilemap};
 use view::{components::IsometricCamera, CutMode, ViewCutMode};
@@ -120,6 +122,7 @@ fn main() {
     world.add_resource(Tilemap::with_size(MAP_WIDTH, MAP_HEIGHT, MAP_DEPTH));
     world.add_resource(AStar::new());
     world.add_resource(DepthBuffer::new());
+    world.add_resource(Graphix::new(GlGraphics::new(opengl)));
     world.add_resource(ViewCutMode::default());
     world.register::<Actor>();
     world.register::<IsometricCamera>();
@@ -140,7 +143,7 @@ fn main() {
         .with(WalkerSystem::new(), "walker", &[])
         .build();
     let mut render_dispatcher = DispatcherBuilder::new()
-        .with_thread_local(SpriteRenderer::from_graphics(GlGraphics::new(opengl)))
+        .with_thread_local(SpriteRenderer::new())
         .build();
 
     let sprite_settings = TextureSettings::new();

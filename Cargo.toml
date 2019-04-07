@@ -22,6 +22,7 @@ criterion = "0.2"
 
 [dependencies]
 camera_controllers = "0.27.0"
+cgmath = { version = "0.16", features = ["mint"] }
 crossbeam = "0.7"
 daggy = "0.6"
 gfx = "0.17.1"
@@ -40,6 +41,7 @@ shader_version = "0.3.0"
 specs = { version = "0.14", default-features = false } # disable rayon as it thrashes CPU
 specs-derive = "0.4"
 threadpool = "1.7"
+three = "0.4.0"
 vecmath = "0.3.0"
 
 [build-dependencies]

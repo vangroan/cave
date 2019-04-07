@@ -33,13 +33,14 @@ mod pathfinding;
 mod pigeon;
 mod position;
 mod render;
+mod scene;
 mod settings;
 mod sprite;
 mod tilemap;
 mod view;
 
 use actor::{Actor, WalkerSystem};
-use common::DeltaTime;
+use common::components::{DeltaTime, OnRender};
 use depthsort::{DepthBuffer, IsometricSorter};
 use grid::{Grid, GridPosition};
 use pathfinding::{
@@ -47,7 +48,7 @@ use pathfinding::{
 };
 use position::Position;
 use render::Graphix;
-use sprite::{OnRender, Sprite, SpriteRenderer};
+use sprite::{Sprite, SpriteRenderer};
 use tilemap::{Tile, TileObj, Tilemap};
 use view::{components::IsometricCamera, CutMode, ViewCutMode};
 

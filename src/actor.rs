@@ -1,6 +1,6 @@
 use specs::prelude::*;
 
-use crate::common::DeltaTime;
+use crate::common::components::DeltaTime;
 use crate::pathfinding::components::Pather;
 use crate::position::Position;
 

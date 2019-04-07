@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .fps(60)
         .ups(60);
 
-    let app = Application::new(settings);
+    let mut app = Application::new(settings);
     app.run()?;
 
     Ok(())

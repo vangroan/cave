@@ -3,10 +3,11 @@ use std::sync::Arc;
 use graphics::types::{Color, Matrix2d};
 use graphics::{Graphics, ImageSize, Transformed};
 use na::Vector2;
-use opengl_graphics::{GlGraphics, Texture};
+use opengl_graphics::Texture;
 use piston::input::*;
 use specs::prelude::*;
 
+use crate::common::components::OnRender;
 use crate::depthsort::DepthBuffer;
 use crate::isometric::Isometric;
 use crate::position::Position;
@@ -200,35 +201,5 @@ impl<'a> System<'a> for SpriteRenderer {
                 gl,
             );
         });
-    }
-}
-
-/// New Type for RenderArgs
-pub struct OnRender(RenderArgs);
-
-impl OnRender {
-    pub fn new(args: RenderArgs) -> Self {
-        OnRender(args)
-    }
-
-    fn args(&self) -> &RenderArgs {
-        &self.0
-    }
-}
-
-impl Default for OnRender {
-    fn default() -> Self {
-        OnRender(RenderArgs {
-            /// Extrapolated time in seconds, used to do smooth animation.
-            ext_dt: 0.,
-            /// The width of rendered area in points.
-            width: 0.,
-            /// The height of rendered area in points.
-            height: 0.,
-            /// The width of rendered area in pixels.
-            draw_width: 0,
-            /// The height of rendered area in pixels.
-            draw_height: 0,
-        })
     }
 }

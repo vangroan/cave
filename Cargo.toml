@@ -21,8 +21,11 @@ path = "src/bin.rs"
 criterion = "0.2"
 
 [dependencies]
+camera_controllers = "0.27.0"
 crossbeam = "0.7"
 daggy = "0.6"
+gfx = "0.17.1"
+gfx_device_gl = "0.16.0"
 nalgebra = "0.17"
 num-traits = "0.2"
 petgraph = "0.4"
@@ -30,11 +33,14 @@ piston = "0.42.0"
 piston2d-graphics = "0.30.0"
 pistoncore-glutin_window = "0.54.0"
 piston2d-opengl_graphics = "0.59.0"
+piston_window = "0.89.0"
 fps_counter = "1.0.0"
 rayon = "1.0"
+shader_version = "0.3.0"
 specs = { version = "0.14", default-features = false } # disable rayon as it thrashes CPU
 specs-derive = "0.4"
 threadpool = "1.7"
+vecmath = "0.3.0"
 
 [build-dependencies]
 fs_extra = "1.1.0"

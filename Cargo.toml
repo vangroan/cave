@@ -22,6 +22,7 @@ criterion = "0.2"
 
 [dependencies]
 crossbeam = "0.7"
+daggy = "0.6"
 nalgebra = "0.17"
 num-traits = "0.2"
 petgraph = "0.4"

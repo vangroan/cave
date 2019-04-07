@@ -1,3 +1,4 @@
+extern crate daggy;
 extern crate fps_counter;
 extern crate glutin_window;
 extern crate graphics;

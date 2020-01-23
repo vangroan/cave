@@ -1,9 +1,11 @@
+extern crate daggy;
 extern crate fps_counter;
 extern crate glutin_window;
 extern crate graphics;
 extern crate nalgebra as na;
 extern crate num_traits as nt;
 extern crate opengl_graphics;
+extern crate petgraph;
 extern crate piston;
 extern crate rayon;
 extern crate specs;
@@ -31,20 +33,23 @@ mod option;
 mod pathfinding;
 mod pigeon;
 mod position;
+mod render;
+mod scene;
 mod settings;
 mod sprite;
 mod tilemap;
 mod view;
 
 use actor::{Actor, WalkerSystem};
-use common::DeltaTime;
+use common::components::{DeltaTime, OnRender};
 use depthsort::{DepthBuffer, IsometricSorter};
 use grid::{Grid, GridPosition};
 use pathfinding::{
     components::Pather, systems::PathfindingSystem, AStar, Locomotion, CLIMB_LADDERS, GROUND_WALK,
 };
 use position::Position;
-use sprite::{OnRender, Sprite, SpriteRenderer};
+use render::Graphix;
+use sprite::{Sprite, SpriteRenderer};
 use tilemap::{Tile, TileObj, Tilemap};
 use view::{components::IsometricCamera, CutMode, ViewCutMode};
 
@@ -74,6 +79,29 @@ fn create_block(
         .build()
 }
 
+fn create_actor(
+    world: &mut World,
+    man_tex: Arc<Texture>,
+    grid_pos: &GridPosition,
+    path_to: &GridPosition,
+) -> Entity {
+    let mut sprite = Sprite::from_texture(man_tex.clone());
+    sprite.set_anchor(0.5, 0.9);
+
+    world
+        .create_entity()
+        .with(Position::new(
+            grid_pos.x() as f64,
+            grid_pos.y() as f64,
+            grid_pos.z() as f64,
+        ))
+        .with(sprite)
+        .with(Actor::with_speed(1.0))
+        .with(Pather::with_request(grid_pos.clone(), path_to.clone()))
+        .with(Locomotion::new(&[GROUND_WALK, CLIMB_LADDERS]))
+        .build()
+}
+
 fn main() {
     // Change this to OpenGL::V2_1 if not working.
     let opengl = OpenGL::V3_2;
@@ -96,6 +124,7 @@ fn main() {
     world.add_resource(Tilemap::with_size(MAP_WIDTH, MAP_HEIGHT, MAP_DEPTH));
     world.add_resource(AStar::new());
     world.add_resource(DepthBuffer::new());
+    world.add_resource(Graphix::new(GlGraphics::new(opengl)));
     world.add_resource(ViewCutMode::default());
     world.register::<Actor>();
     world.register::<IsometricCamera>();
@@ -116,7 +145,7 @@ fn main() {
         .with(WalkerSystem::new(), "walker", &[])
         .build();
     let mut render_dispatcher = DispatcherBuilder::new()
-        .with_thread_local(SpriteRenderer::from_graphics(GlGraphics::new(opengl)))
+        .with_thread_local(SpriteRenderer::new())
         .build();
 
     let sprite_settings = TextureSettings::new();
@@ -194,32 +223,27 @@ fn main() {
     // create_block(&mut world, block_tex.clone(), &GridPosition::new(2, 2, 1));
 
     // Build actors
-    for x in 0..1 {
-        for y in 0..1 {
-            if (x + y) % 2 != 0 {
-                continue;
-            }
-            if x >= 5 && y >= 5 {
-                continue;
-            }
+    // for x in 0..1 {
+    //     for y in 0..1 {
+    //         if (x + y) % 2 != 0 {
+    //             continue;
+    //         }
+    //         if x >= 5 && y >= 5 {
+    //             continue;
+    //         }
 
-            let z = 9;
-            let grid_pos = GridPosition::new(x, y, z);
+    //         let z = 9;
+    //         create_actor(&mut world, man_tex.clone(), &GridPosition::new(x, y, z), &GridPosition::new(9, 9, 5));
+    //     }
+    // }
 
-            let mut sprite = Sprite::from_texture(man_tex.clone());
-            // sprite.set_position(pos.x, pos.y - pos.z);
-            sprite.set_anchor(0.5, 0.9);
-
-            world
-                .create_entity()
-                .with(Position::new(x as f64, y as f64, z as f64))
-                .with(sprite)
-                .with(Actor::with_speed(1.0))
-                .with(Pather::with_request(grid_pos, GridPosition::new(9, 9, 5)))
-                .with(Locomotion::new(&[GROUND_WALK, CLIMB_LADDERS]))
-                .build();
-        }
-    }
+    // Build Actor
+    create_actor(
+        &mut world,
+        man_tex.clone(),
+        &GridPosition::new(9, 9, 5),
+        &GridPosition::new(4, 4, 9),
+    );
 
     let settings = EventSettings::new().max_fps(60).ups(60);
 

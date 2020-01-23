@@ -22,8 +22,10 @@ criterion = "0.2"
 
 [dependencies]
 crossbeam = "0.7"
+daggy = "0.6"
 nalgebra = "0.17"
 num-traits = "0.2"
+petgraph = "0.4"
 piston = "0.42.0"
 piston2d-graphics = "0.30.0"
 pistoncore-glutin_window = "0.54.0"
@@ -38,3 +40,7 @@ threadpool = "1.7"
 fs_extra = "1.1.0"
 glob = "0.2.*"
 itertools = "0.7.*"
+
+[profile.release]
+debug = true # keep symbols for backtrace in the wild
+panic = "unwind"

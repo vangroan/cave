@@ -3,13 +3,15 @@ use std::sync::Arc;
 use graphics::types::{Color, Matrix2d};
 use graphics::{Graphics, ImageSize, Transformed};
 use na::Vector2;
-use opengl_graphics::{GlGraphics, Texture};
+use opengl_graphics::Texture;
 use piston::input::*;
 use specs::prelude::*;
 
+use crate::common::components::OnRender;
 use crate::depthsort::DepthBuffer;
 use crate::isometric::Isometric;
 use crate::position::Position;
+use crate::render::Graphix;
 use crate::settings::*;
 use crate::view::components::IsometricCamera;
 
@@ -120,13 +122,11 @@ where
     }
 }
 
-pub struct SpriteRenderer {
-    gl: GlGraphics,
-}
+pub struct SpriteRenderer;
 
 impl SpriteRenderer {
-    pub fn from_graphics(gl: GlGraphics) -> Self {
-        SpriteRenderer { gl }
+    pub fn new() -> Self {
+        SpriteRenderer
     }
 }
 
@@ -134,6 +134,7 @@ impl<'a> System<'a> for SpriteRenderer {
     type SystemData = (
         Entities<'a>,
         Read<'a, OnRender>,
+        Write<'a, Graphix>,
         ReadStorage<'a, IsometricCamera>,
         ReadStorage<'a, Sprite<Texture>>,
         ReadStorage<'a, Position>,
@@ -142,12 +143,12 @@ impl<'a> System<'a> for SpriteRenderer {
 
     fn run(
         &mut self,
-        (entities, on_render, cameras, sprites, positions, buffer): Self::SystemData,
+        (entities, on_render, mut graphics, cameras, sprites, positions, buffer): Self::SystemData,
     ) {
         use graphics::*;
         use specs::Join;
 
-        let SpriteRenderer { gl, .. } = self;
+        let gl = graphics.gl_mut();
 
         let camera_pos_iso = (&cameras, &positions)
             .join()
@@ -200,35 +201,5 @@ impl<'a> System<'a> for SpriteRenderer {
                 gl,
             );
         });
-    }
-}
-
-/// New Type for RenderArgs
-pub struct OnRender(RenderArgs);
-
-impl OnRender {
-    pub fn new(args: RenderArgs) -> Self {
-        OnRender(args)
-    }
-
-    fn args(&self) -> &RenderArgs {
-        &self.0
-    }
-}
-
-impl Default for OnRender {
-    fn default() -> Self {
-        OnRender(RenderArgs {
-            /// Extrapolated time in seconds, used to do smooth animation.
-            ext_dt: 0.,
-            /// The width of rendered area in points.
-            width: 0.,
-            /// The height of rendered area in points.
-            height: 0.,
-            /// The width of rendered area in pixels.
-            draw_width: 0,
-            /// The height of rendered area in pixels.
-            draw_height: 0,
-        })
     }
 }

@@ -30,7 +30,7 @@ impl Isometric {
     /// Convert 3D Cartesian coordinates to 2D Isometric Coordinates
     pub fn cart_to_iso<N>(pos: &na::Vector3<N>) -> na::Vector3<N>
     where
-        N: na::Scalar + nt::Num + nt::NumCast,
+        N: na::Scalar + nt::Num + nt::NumCast + Copy,
     {
         let _2: N = nt::NumCast::from(2).unwrap();
         let _4: N = nt::NumCast::from(4).unwrap();
@@ -41,7 +41,7 @@ impl Isometric {
 
     pub fn iso_to_cart<N>(pos: &na::Vector3<N>) -> na::Vector3<N>
     where
-        N: na::Scalar + nt::Num + nt::NumCast,
+        N: na::Scalar + nt::Num + nt::NumCast + Copy,
     {
         let _2: N = nt::NumCast::from(2).unwrap();
         let _4: N = nt::NumCast::from(4).unwrap();

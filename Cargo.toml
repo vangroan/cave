@@ -22,7 +22,7 @@ criterion = "0.2"
 
 [dependencies]
 crossbeam = "0.7"
-nalgebra = "0.17"
+nalgebra = "0.32"
 num-traits = "0.2"
 piston = "0.42.0"
 piston2d-graphics = "0.30.0"
